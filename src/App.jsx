@@ -775,7 +775,7 @@ export default function App() {
           <div className="rt-infolinks">
             <button className="rt-infolink" onClick={() => setMostrarShoppings(true)}>Sobre os shoppings</button>
             <button className="rt-infolink" onClick={() => setMostrarComo(true)}>Como funciona</button>
-            {perfil && perfil.papel === "admin"" && (
+            {perfil && perfil.papel === "admin" && (
               <button className="rt-infolink" onClick={() => setMostrarAdmin(true)}>Painel Admin</button>
             )}
           </div>
