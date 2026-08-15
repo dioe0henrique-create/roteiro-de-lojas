@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "./supabaseClient";
 import { PRIMAVERA_WHATSAPP, SHOPPING_INFO, SHOPPINGS, ICONES, SUGESTOES, FAIXAS } from "./lib/constants";
-import { norm, iniciais, waLink, igLink, dataCurta, media, statusMarca } from "./lib/helpers";
+import { norm, iniciais, waLink, igLink, dataCurta, dataBR, maskCNPJ, maskTelefone, media, statusMarca } from "./lib/helpers";
 
 // ---------------------------------------------------------------------------
 // Peças pequenas de UI
@@ -318,18 +318,39 @@ function ComoFuncionaModal({ onClose }) {
 function AuthModal({ onClose }) {
   const [modo, setModo] = useState("entrar"); // entrar | criar
   const [nome, setNome] = useState("");
+  const [nomeCompleto, setNomeCompleto] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [dataNasc, setDataNasc] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [msg, setMsg] = useState("");
 
+  const cnpjOk = cnpj.replace(/\D/g, "").length === 14;
+  const telOk = telefone.replace(/\D/g, "").length >= 10;
+  const criarOk = nome.trim() && nomeCompleto.trim() && cnpjOk && telOk && dataNasc && email && senha;
+
   const enviar = async () => {
     setCarregando(true);
     setMsg("");
     if (modo === "criar") {
+      if (!criarOk) {
+        setCarregando(false);
+        setMsg("Preenche todos os campos certinho pra gente conseguir criar sua conta.");
+        return;
+      }
       const { error } = await supabase.auth.signUp({
         email: email.trim(), password: senha,
-        options: { data: { nome: nome.trim() || "Lojista" } },
+        options: {
+          data: {
+            nome: nome.trim() || "Lojista",
+            nome_completo: nomeCompleto.trim(),
+            cnpj: cnpj.trim(),
+            telefone: telefone.trim(),
+            data_nascimento: dataNasc,
+          },
+        },
       });
       setCarregando(false);
       if (error) { setMsg(error.message); return; }
@@ -351,15 +372,28 @@ function AuthModal({ onClose }) {
         </p>
         <div className="rt-mini-form">
           {modo === "criar" && (
-            <input className="rt-input" value={nome} placeholder="Seu nome ou o nome da sua loja"
-              onChange={(e) => setNome(e.target.value)} />
+            <>
+              <input className="rt-input" value={nome} placeholder="Nome da sua loja"
+                onChange={(e) => setNome(e.target.value)} />
+              <input className="rt-input" value={nomeCompleto} placeholder="Seu nome completo"
+                onChange={(e) => setNomeCompleto(e.target.value)} />
+              <input className="rt-input" value={cnpj} placeholder="CNPJ" inputMode="numeric"
+                onChange={(e) => setCnpj(maskCNPJ(e.target.value))} />
+              <input className="rt-input" value={telefone} placeholder="Telefone / WhatsApp" inputMode="tel"
+                onChange={(e) => setTelefone(maskTelefone(e.target.value))} />
+              <div>
+                <span style={{ fontSize: 12, color: "var(--muted)", display: "block", marginBottom: 4 }}>Data de nascimento</span>
+                <input className="rt-input" type="date" value={dataNasc}
+                  onChange={(e) => setDataNasc(e.target.value)} />
+              </div>
+            </>
           )}
           <input className="rt-input" type="email" value={email} placeholder="seu@email.com"
             onChange={(e) => setEmail(e.target.value)} />
           <input className="rt-input" type="password" value={senha} placeholder="Senha"
             onChange={(e) => setSenha(e.target.value)} />
           <div className="rt-save-row">
-            <button className="rt-btn" onClick={enviar} disabled={carregando || !email || !senha}>
+            <button className="rt-btn" onClick={enviar} disabled={carregando || !email || !senha || (modo === "criar" && !criarOk)}>
               {carregando ? "Um instante…" : modo === "entrar" ? "Entrar" : "Criar conta"}
             </button>
             <button className="rt-btn ghost" onClick={() => { setModo(modo === "entrar" ? "criar" : "entrar"); setMsg(""); }}>
@@ -396,7 +430,21 @@ function PerfilModal({ perfil, favsCount, onSaveNome, onLogout, onClose }) {
 function AdminPanel({ lojas, revsByLoja, onUpdateLoja, onDeleteReview, onClose }) {
   const [salvandoId, setSalvandoId] = useState(null);
   const [busca, setBusca] = useState("");
+  const [buscaUser, setBuscaUser] = useState("");
+  const [usuarios, setUsuarios] = useState(null); // null = carregando
   const filtradas = lojas.filter((l) => norm(l.nome).includes(norm(busca)));
+
+  useEffect(() => {
+    supabase.from("perfis").select("*").order("created_at", { ascending: false }).then(({ data, error }) => {
+      setUsuarios(error ? [] : data);
+    });
+  }, []);
+
+  const usuariosFiltrados = (usuarios || []).filter((u) =>
+    norm(u.nome).includes(norm(buscaUser)) ||
+    norm(u.nome_completo || "").includes(norm(buscaUser)) ||
+    (u.cnpj || "").includes(buscaUser)
+  );
 
   const salvarLinha = async (l, patch) => {
     setSalvandoId(l.id);
@@ -442,6 +490,31 @@ function AdminPanel({ lojas, revsByLoja, onUpdateLoja, onDeleteReview, onClose }
               </button>
             </div>
           ))}
+        </div>
+
+        <p className="rt-block-lab" style={{ marginTop: 20 }}>
+          Lojistas cadastrados (CRM) {usuarios ? `(${usuarios.length})` : ""}
+        </p>
+        <input className="rt-input" value={buscaUser} placeholder="Buscar por nome ou CNPJ…"
+          onChange={(e) => setBuscaUser(e.target.value)} />
+        <div style={{ maxHeight: 320, overflowY: "auto", marginTop: 10 }}>
+          {usuarios === null && <p className="rt-hint">Carregando…</p>}
+          {usuarios !== null && usuariosFiltrados.length === 0 && <p className="rt-hint">Ninguém encontrado.</p>}
+          {usuariosFiltrados.slice(0, 60).map((u) => (
+            <div className="rt-review" key={u.id}>
+              <div className="rt-review-top">
+                <span className="rt-review-autor">{u.nome}{u.papel === "admin" ? " · admin" : ""}</span>
+                <span className="rt-review-data">{dataBR(u.created_at ? u.created_at.slice(0, 10) : null) || dataCurta(u.created_at)}</span>
+              </div>
+              <p className="rt-review-txt" style={{ margin: "4px 0 0" }}>
+                {u.nome_completo || <em style={{ color: "var(--muted)" }}>sem nome completo</em>}
+                {u.cnpj ? ` · CNPJ ${u.cnpj}` : ""}
+                {u.telefone ? ` · ${u.telefone}` : ""}
+                {u.data_nascimento ? ` · nasc. ${dataBR(u.data_nascimento)}` : ""}
+              </p>
+            </div>
+          ))}
+          {usuariosFiltrados.length > 60 && <p className="rt-hint">Mostrando os 60 primeiros — refine a busca pra achar outros.</p>}
         </div>
 
         <div style={{ marginTop: 16 }}><button className="rt-btn ghost" onClick={onClose}>Fechar</button></div>
@@ -702,7 +775,7 @@ export default function App() {
           <div className="rt-infolinks">
             <button className="rt-infolink" onClick={() => setMostrarShoppings(true)}>Sobre os shoppings</button>
             <button className="rt-infolink" onClick={() => setMostrarComo(true)}>Como funciona</button>
-            {perfil && perfil.papel === "admin" && (
+            {perfil && perfil.papel === "admin"" && (
               <button className="rt-infolink" onClick={() => setMostrarAdmin(true)}>Painel Admin</button>
             )}
           </div>
