@@ -47,8 +47,8 @@ export const SUGESTOES = {
 
 export const FAIXAS = [
   { id: "todas", label: "Qualquer preço" },
-  { id: "a", label: "até R$ 50", test: (t) => t != null && t <= 50 },
-  { id: "b", label: "R$ 50–100", test: (t) => t != null && t > 50 && t <= 100 },
-  { id: "c", label: "R$ 100–200", test: (t) => t != null && t > 100 && t <= 200 },
-  { id: "d", label: "R$ 200+", test: (t) => t != null && t > 200 },
+  { id: "a", label: "até R$ 50", faixa: [0, 50] },
+  { id: "b", label: "R$ 50–100", faixa: [50, 100] },
+  { id: "c", label: "R$ 100–200", faixa: [100, 200] },
+  { id: "d", label: "R$ 200+", faixa: [200, 999999] },
 ];
