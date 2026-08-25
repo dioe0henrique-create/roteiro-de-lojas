@@ -261,3 +261,16 @@
   .rt-cat { width:76px; }
   .rt-cat-ico { width:64px; height:64px; font-size:28px; }
 }
+
+
+/* --- porta de entrada (antes do cadastro) --- */
+.rt-porta { min-height:100vh; background:var(--ink); display:flex; align-items:center; justify-content:center; padding:32px 20px; }
+.rt-porta-in { max-width:520px; width:100%; }
+.rt-porta-tit { font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:clamp(30px,7vw,44px); line-height:1.1; color:var(--bone); margin:8px 0 14px; }
+.rt-porta-sub { font-size:15px; line-height:1.55; color:#BEB8AF; margin:0 0 22px; }
+.rt-porta-lista { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:11px; }
+.rt-porta-lista li { font-size:14px; color:var(--bone); padding-left:26px; position:relative; line-height:1.4; }
+.rt-porta-lista li::before { content:"✓"; position:absolute; left:0; color:var(--red); font-weight:700; }
+.rt-porta-btn { width:100%; font-family:'DM Sans',sans-serif; font-weight:500; font-size:16px; background:var(--red); color:#fff; border:0; padding:16px; border-radius:8px; cursor:pointer; }
+.rt-porta-btn:hover { background:var(--red-deep); }
+.rt-porta-pe { font-size:12px; color:#8C857C; text-align:center; margin:12px 0 0; }

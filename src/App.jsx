@@ -81,7 +81,7 @@ function Sheet({ l, info, revs, session, perfil, onSaveInfo, onAddReview, onFav,
       (perfil.cidade ? `, de ${perfil.cidade}${perfil.estado ? "-" + perfil.estado : ""}` : "") +
       `. Vim pelo ${APP_NOME}. Queria saber sobre `
     : "";
-  const wa = waLink(l.tel, quem ? quem + "as pe\u00e7as de voc\u00eas." : null);
+  const wa = waLink(l.tel, quem ? quem + "as peças de vocês." : null);
   const ig = igLink(l.insta);
   const st = statusMarca(revs);
   const m = media(revs);
@@ -298,42 +298,42 @@ function ComoFuncionaModal({ onClose }) {
     <div className="rt-backdrop" style={{ alignItems: "flex-start", justifyContent: "center", padding: 20 }} onClick={onClose}>
       <div className="rt-modal-c" style={{ maxWidth: 620 }} onClick={(e) => e.stopPropagation()}>
         <h3 className="rt-modal-t">Como funciona</h3>
-        <p className="rt-hint">Do cadastro at\u00e9 a mercadoria chegar na sua loja.</p>
+        <p className="rt-hint">Do cadastro até a mercadoria chegar na sua loja.</p>
         <ol className="rt-steps" style={{ marginTop: 16 }}>
           <li><span className="rt-step-n">01</span><div className="rt-step-txt">
-            <b>Voc\u00ea se cadastra</b>
+            <b>Você se cadastra</b>
             <p>Leva 1 minuto e libera as 336 marcas dos 3 shoppings do polo, com telefone
             e Instagram de cada uma. Sem custo.</p>
           </div></li>
           <li><span className="rt-step-n">02</span><div className="rt-step-txt">
             <b>Procura do seu jeito</b>
-            <p>Por tipo de pe\u00e7a, faixa de pre\u00e7o, shopping ou segmento. D\u00e1 pra favoritar
+            <p>Por tipo de peça, faixa de preço, shopping ou segmento. Dá pra favoritar
             o que gostou e ver o que outras lojistas avaliaram.</p>
           </div></li>
           <li><span className="rt-step-n">03</span><div className="rt-step-txt">
             <b>Fala direto com a marca</b>
-            <p>Um toque abre o WhatsApp da loja com sua apresenta\u00e7\u00e3o pronta. Quem entende
-            de pre\u00e7o, promo\u00e7\u00e3o e novidade \u00e9 a pr\u00f3pria marca \u2014 ent\u00e3o voc\u00ea negocia com quem sabe.</p>
+            <p>Um toque abre o WhatsApp da loja com sua apresentação pronta. Quem entende
+            de preço, promoção e novidade é a própria marca — então você negocia com quem sabe.</p>
           </div></li>
           <li><span className="rt-step-n">04</span><div className="rt-step-txt">
-            <b>A loja vende pra voc\u00ea</b>
-            <p>A venda \u00e9 direta, com nota no seu nome. Sem atravessador e sem intermedi\u00e1rio
-            no meio do pre\u00e7o.</p>
+            <b>A loja vende pra você</b>
+            <p>A venda é direta, com nota no seu nome. Sem atravessador e sem intermediário
+            no meio do preço.</p>
           </div></li>
           <li><span className="rt-step-n">05</span><div className="rt-step-txt">
             <b>Eu junto tudo e despacho</b>
-            <p>Comprou de 3 marcas diferentes? Eu recolho em cada loja, monto um pacote s\u00f3
-            e envio direto do polo pro seu endere\u00e7o. Voc\u00ea n\u00e3o precisa vir at\u00e9 aqui.</p>
+            <p>Comprou de 3 marcas diferentes? Eu recolho em cada loja, monto um pacote só
+            e envio direto do polo pro seu endereço. Você não precisa vir até aqui.</p>
           </div></li>
           <li><span className="rt-step-n">06</span><div className="rt-step-txt">
             <b>Quer ajuda pra escolher?</b>
-            <p>Pe\u00e7a a curadoria gr\u00e1tis no bot\u00e3o l\u00e1 embaixo. Eu olho o perfil da sua loja e
-            monto uma lista com as marcas que mais fazem sentido pro seu p\u00fablico.</p>
+            <p>Peça a curadoria grátis no botão lá embaixo. Eu olho o perfil da sua loja e
+            monto uma lista com as marcas que mais fazem sentido pro seu público.</p>
           </div></li>
         </ol>
         <div className="rt-quem">
-          <b>Prefere ir pessoalmente?</b> A viagem quinzenal continua acontecendo \u2014
-          Cianorte e Maring\u00e1 no mesmo pacote. Chama no WhatsApp que eu te explico.
+          <b>Prefere ir pessoalmente?</b> A viagem quinzenal continua acontecendo —
+          Cianorte e Maringá no mesmo pacote. Chama no WhatsApp que eu te explico.
         </div>
         <div style={{ marginTop: 16 }}><button className="rt-btn ghost" onClick={onClose}>Fechar</button></div>
       </div>
@@ -345,20 +345,20 @@ function ComoFuncionaModal({ onClose }) {
 // Curadoria assistida (funil)
 // ---------------------------------------------------------------------------
 const CUR_PERGUNTAS = [
-  { id: "faixa", multi: false, titulo: "Quanto voc\u00ea compra por m\u00eas, mais ou menos?",
-    ops: ["At\u00e9 R$ 5 mil", "R$ 5 a 10 mil", "R$ 10 a 20 mil", "Mais de R$ 20 mil", "Ainda n\u00e3o compro"] },
-  { id: "canal", multi: false, titulo: "Como voc\u00ea vende hoje?",
-    ops: ["Loja f\u00edsica", "F\u00edsica + online", "S\u00f3 online", "Sacoleira / pronta-entrega", "WhatsApp e redes"] },
-  { id: "onde", multi: true, titulo: "Onde voc\u00ea compra hoje?",
-    ops: ["Polo do Paran\u00e1", "Br\u00e1s (SP)", "Goi\u00e2nia", "Agreste (PE)", "Online direto das marcas", "Representante me visita", "Ainda n\u00e3o compro"] },
+  { id: "faixa", multi: false, titulo: "Quanto você compra por mês, mais ou menos?",
+    ops: ["Até R$ 5 mil", "R$ 5 a 10 mil", "R$ 10 a 20 mil", "Mais de R$ 20 mil", "Ainda não compro"] },
+  { id: "canal", multi: false, titulo: "Como você vende hoje?",
+    ops: ["Loja física", "Física + online", "Só online", "Sacoleira / pronta-entrega", "WhatsApp e redes"] },
+  { id: "onde", multi: true, titulo: "Onde você compra hoje?",
+    ops: ["Polo do Paraná", "Brás (SP)", "Goiânia", "Agreste (PE)", "Online direto das marcas", "Representante me visita", "Ainda não compro"] },
   { id: "segmentos", multi: true, titulo: "O que mais sai na sua loja?",
-    ops: ["Feminina", "Masculina", "Jeans", "Infantil", "Plus Size Feminina", "Evang\u00e9lica", "\u00cdntima & Fitness", "Acess\u00f3rios", "Perfumaria & Casa"] },
-  { id: "tempo", multi: false, titulo: "H\u00e1 quanto tempo tem a loja?",
-    ops: ["Come\u00e7ando agora", "At\u00e9 1 ano", "1 a 3 anos", "Mais de 3 anos"] },
+    ops: ["Feminina", "Masculina", "Jeans", "Infantil", "Plus Size Feminina", "Evangélica", "Íntima & Fitness", "Acessórios", "Perfumaria & Casa"] },
+  { id: "tempo", multi: false, titulo: "Há quanto tempo tem a loja?",
+    ops: ["Começando agora", "Até 1 ano", "1 a 3 anos", "Mais de 3 anos"] },
   { id: "frete", multi: false, titulo: "Costuma pagar frete?",
-    ops: ["Sim, sempre", "\u00c0s vezes", "Nunca paguei"] },
-  { id: "guia", multi: false, titulo: "J\u00e1 tem algu\u00e9m que te acompanha nas compras?",
-    ops: ["N\u00e3o, vou por conta", "Sim, tenho um guia", "Vou com excurs\u00e3o"] },
+    ops: ["Sim, sempre", "Às vezes", "Nunca paguei"] },
+  { id: "guia", multi: false, titulo: "Já tem alguém que te acompanha nas compras?",
+    ops: ["Não, vou por conta", "Sim, tenho um guia", "Vou com excursão"] },
 ];
 
 function CuradoriaModal({ perfil, onEnviar, onClose }) {
@@ -394,10 +394,10 @@ function CuradoriaModal({ perfil, onEnviar, onClose }) {
     return (
       <div className="rt-backdrop" style={{ alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
         <div className="rt-modal-c" onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 40 }}>\ud83d\udc9b</div>
+          <div style={{ fontSize: 40 }}>💛</div>
           <h3 className="rt-modal-t">Recebi!</h3>
           <p className="rt-hint" style={{ fontSize: 14 }}>
-            Vou olhar seu perfil com calma e te chamo no WhatsApp em at\u00e9 24h com as marcas
+            Vou olhar seu perfil com calma e te chamo no WhatsApp em até 24h com as marcas
             que mais fazem sentido pra sua loja.
           </p>
           <button className="rt-btn" onClick={onClose}>Voltar pro roteiro</button>
@@ -409,10 +409,10 @@ function CuradoriaModal({ perfil, onEnviar, onClose }) {
   return (
     <div className="rt-backdrop" style={{ alignItems: "flex-start", justifyContent: "center", padding: 20 }} onClick={onClose}>
       <div className="rt-modal-c" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
-        <h3 className="rt-modal-t">Receba uma curadoria gr\u00e1tis</h3>
+        <h3 className="rt-modal-t">Receba uma curadoria grátis</h3>
         <p className="rt-hint" style={{ fontSize: 13 }}>
-          Me conta como \u00e9 sua loja e eu monto uma lista com as marcas mais lucrativas pro seu
-          p\u00fablico \u2014 sem custo, sem compromisso. Leva 1 minuto, tudo em toques.
+          Me conta como é sua loja e eu monto uma lista com as marcas mais lucrativas pro seu
+          público — sem custo, sem compromisso. Leva 1 minuto, tudo em toques.
         </p>
 
         <div className="rt-cur-prog">
@@ -436,15 +436,15 @@ function CuradoriaModal({ perfil, onEnviar, onClose }) {
 
         <div className="rt-cur-q">
           <p className="rt-cur-tit">Quer contar mais alguma coisa? <span className="rt-cur-multi">opcional</span></p>
-          <textarea className="rt-area" value={obs} placeholder="O que voc\u00ea procura, dificuldade que tem, o que n\u00e3o quer\u2026"
+          <textarea className="rt-area" value={obs} placeholder="O que você procura, dificuldade que tem, o que não quer…"
             onChange={(e) => setObs(e.target.value)} />
         </div>
 
         <div className="rt-save-row" style={{ marginTop: 14 }}>
           <button className="rt-btn" onClick={enviar} disabled={enviando || respondidas < 3}>
-            {enviando ? "Enviando\u2026" : "Quero minha curadoria"}
+            {enviando ? "Enviando…" : "Quero minha curadoria"}
           </button>
-          <button className="rt-btn ghost" onClick={onClose}>Agora n\u00e3o</button>
+          <button className="rt-btn ghost" onClick={onClose}>Agora não</button>
         </div>
         {respondidas < 3 && (
           <p className="rt-hint" style={{ margin: "8px 0 0" }}>Responde pelo menos 3 pra eu conseguir te ajudar direito.</p>
@@ -528,8 +528,8 @@ function AuthModal({ onClose }) {
                 <input className="rt-input" value={cnpj} placeholder="CNPJ ou CPF" inputMode="numeric"
                   onChange={(e) => setCnpj(maskDoc(e.target.value))} />
                 <span style={{ fontSize: 11, color: "var(--muted)", display: "block", marginTop: 4 }}>
-                  {cnpj ? (cnpjOk ? `\u2713 ${tipoDoc(cnpj)}` : "Continue digitando\u2026")
-                        : "Ainda n\u00e3o tem CNPJ? Pode usar seu CPF."}
+                  {cnpj ? (cnpjOk ? `✓ ${tipoDoc(cnpj)}` : "Continue digitando…")
+                        : "Ainda não tem CNPJ? Pode usar seu CPF."}
                 </span>
               </div>
               <input className="rt-input" value={telefone} placeholder="Telefone / WhatsApp" inputMode="tel"
@@ -697,8 +697,8 @@ function AdminLojaRow({ l, salvando, onSave, onDestaque }) {
     <div className="rt-mini-form" style={{ borderBottom: "1px solid var(--rule)", paddingBottom: 10, marginBottom: 10 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button className="rt-star-btn" data-on={l.destaque ? "1" : "0"}
-          title={l.destaque ? "Tirar dos destaques" : "Destacar na primeira p\u00e1gina"}
-          onClick={() => onDestaque(l)}>{l.destaque ? "\u2605" : "\u2606"}</button>
+          title={l.destaque ? "Tirar dos destaques" : "Destacar na primeira página"}
+          onClick={() => onDestaque(l)}>{l.destaque ? "★" : "☆"}</button>
         <input className="rt-input" value={nome} style={{ flex: 1 }} onChange={(e) => setNome(e.target.value)} />
       </div>
       <div style={{ display: "flex", gap: 8 }}>
@@ -718,6 +718,29 @@ function AdminLojaRow({ l, salvando, onSave, onDestaque }) {
 // ---------------------------------------------------------------------------
 // App
 // ---------------------------------------------------------------------------
+function PortaEntrada({ onEntrar }) {
+  return (
+    <div className="rt-porta">
+      <div className="rt-porta-in">
+        <p className="rt-eyebrow">Arara</p>
+        <h1 className="rt-porta-tit">As 336 marcas do polo,<br />na palma da sua mão.</h1>
+        <p className="rt-porta-sub">
+          Master Cianorte, Paraná Moda Park e Vest Sul reunidos num roteiro só —
+          com contato direto de cada marca, tipo de peça e faixa de preço.
+        </p>
+        <ul className="rt-porta-lista">
+          <li>Fale direto com a marca pelo WhatsApp</li>
+          <li>Filtre por segmento, preço e shopping</li>
+          <li>Peça uma curadoria grátis pra sua loja</li>
+          <li>Compre de várias marcas e receba num pacote só</li>
+        </ul>
+        <button className="rt-porta-btn" onClick={onEntrar}>Criar minha conta grátis</button>
+        <p className="rt-porta-pe">Leva 1 minuto · Sem custo · Já tem conta? É o mesmo botão.</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = ainda checando
   const [perfil, setPerfil] = useState(null);
@@ -966,13 +989,25 @@ export default function App() {
     ? `https://wa.me/${PRIMAVERA_WHATSAPP}?text=${encodeURIComponent("Oi! Vi o roteiro de lojas e quero ir comprar no Paraná com a Primavera Tur.")}`
     : null;
 
+  if (session === undefined) {
+    return <div className="rt"><div className="rt-load">carregando…</div></div>;
+  }
+  if (!session) {
+    return (
+      <div className="rt">
+        <PortaEntrada onEntrar={() => setMostrarAuth(true)} />
+        {mostrarAuth && <AuthModal onClose={() => setMostrarAuth(false)} />}
+      </div>
+    );
+  }
+
   return (
     <div className="rt">
       <div className="rt-top">
         <div className="rt-top-wrap">
           <div className="rt-top-row">
             <div>
-              <p className="rt-eyebrow">Primavera Tur</p>
+              <p className="rt-eyebrow">Arara</p>
               <h1 className="rt-title">O que você procura hoje?</h1>
             </div>
             <button className="rt-perfil-btn" onClick={() => (session ? setMostrarPerfil(true) : setMostrarAuth(true))}>
@@ -1058,10 +1093,19 @@ export default function App() {
 
       <div className="rt-cta">
         <div className="rt-cta-in">
-          <span className="rt-cta-txt"><b>Bora comprar no Paraná?</b>Viagem quinzenal com a Primavera Tur</span>
-          <a className="rt-cta-btn" href={waCta || "#"} target={waCta ? "_blank" : undefined} rel="noreferrer">
-            Falar agora
-          </a>
+          <span className="rt-cta-txt">
+            <b>Não sabe por onde começar?</b>
+            Eu monto a lista das marcas certas pra sua loja
+          </span>
+          <div className="rt-cta-acoes">
+            <button className="rt-cta-btn" onClick={() => (session ? setMostrarCuradoria(true) : setMostrarAuth(true))}>
+              Quero minha curadoria
+            </button>
+            <a className="rt-cta-wa" href={waCta || "#"} target={waCta ? "_blank" : undefined}
+               rel="noreferrer" aria-label="Tirar dúvida no WhatsApp" title="Tirar dúvida no WhatsApp">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 18.15h-.01c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.69 8.23-8.21 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.79.97-.14.16-.29.18-.54.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.87.85-.87 2.07s.89 2.4 1.02 2.56c.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/></svg>
+            </a>
+          </div>
         </div>
       </div>
 
