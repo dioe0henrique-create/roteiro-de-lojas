@@ -1,3 +1,5 @@
+export const APP_NOME = "Roteiro de Lojas";
+
 export const PRIMAVERA_WHATSAPP = "5566996983540";
 
 // Dados reais dos shoppings — Manual Mestre Primavera Tur, seção 10.
