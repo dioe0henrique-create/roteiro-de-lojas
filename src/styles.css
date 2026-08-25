@@ -411,3 +411,14 @@ html, body { margin:0; padding:0; width:100%; overflow-x:hidden; background:#141
   .rt-kpis { grid-template-columns:1fr 1fr; }
   .rt-lead-acoes .rt-btn { flex:1; text-align:center; }
 }
+
+
+/* --- bloco "Como comprar" na ficha da loja --- */
+.rt-comercial { display:flex; flex-direction:column; gap:8px; }
+.rt-comercial > div { display:flex; justify-content:space-between; gap:12px; align-items:baseline;
+  border-bottom:1px dashed var(--rule); padding-bottom:7px; }
+.rt-comercial > div:last-child { border-bottom:0; padding-bottom:0; }
+.rt-comercial span { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted); flex:0 0 auto; }
+.rt-comercial b { font-size:13px; font-weight:500; text-align:right; }
+.rt-ticket small { font-weight:400; }

@@ -52,9 +52,11 @@ function Card({ l, info, revs, isFav, onOpen, onFav }) {
 
       <div className="rt-row2">
         <span className="rt-shop-tag" style={{ background: s.cor }}>{s.curto}</span>
-        {info && info.t != null
-          ? <span className="rt-ticket">R$ {info.t}<small> /peça</small></span>
-          : <span className="rt-ticket vazio">sem preço ainda</span>}
+        {info && info.t != null ? (
+          info.mn != null && info.mx != null && info.mx > info.mn
+            ? <span className="rt-ticket">R$ {info.mn}<small>–</small>{info.mx}<small> /peça</small></span>
+            : <span className="rt-ticket">R$ {info.t}<small> /peça</small></span>
+        ) : <span className="rt-ticket vazio">sem preço ainda</span>}
       </div>
 
       {info && info.p && info.p.length > 0 && (
@@ -206,6 +208,18 @@ function Sheet({ l, info, revs, session, perfil, onSaveInfo, onAddReview, onFav,
               </div>
             )}
           </div>
+
+          {info && (info.min || info.pag || info.gr) && (
+            <div>
+              <p className="rt-block-lab">Como comprar</p>
+              <div className="rt-comercial">
+                {info.min && <div><span>Pedido mínimo</span><b>{info.min}</b></div>}
+                {info.gr && <div><span>Grade</span><b>{info.gr}</b></div>}
+                {info.pag && <div><span>Pagamento</span><b>{info.pag}</b></div>}
+              </div>
+              <p className="rt-hint" style={{ margin: "6px 0 0" }}>Informado pela própria marca. Confirme na conversa.</p>
+            </div>
+          )}
 
           <div className="rt-linkrow">
             {logado ? (
@@ -591,7 +605,7 @@ function PerfilModal({ perfil, favsCount, onSaveNome, onLogout, onClose }) {
   );
 }
 
-function AdminPanel({ lojas, colab, revsByLoja, onUpdateLoja, onSaveColab, onDeleteReview, onDestaque, onReordenar, onClose }) {
+function AdminPanel({ lojas, colab, revsByLoja, onUpdateLoja, onSaveColab, onCriarLoja, onDeleteReview, onDestaque, onReordenar, onClose }) {
   const [aba, setAba] = useState("resumo");
   const [curadorias, setCuradorias] = useState(null);
   const [lojistas, setLojistas] = useState(null);
@@ -599,6 +613,7 @@ function AdminPanel({ lojas, colab, revsByLoja, onUpdateLoja, onSaveColab, onDel
   const [buscaUser, setBuscaUser] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [salvandoId, setSalvandoId] = useState(null);
+  const [novaLoja, setNovaLoja] = useState(null);
 
   useEffect(() => {
     supabase.from("consultorias").select("*").order("created_at", { ascending: false })
@@ -816,11 +831,50 @@ function AdminPanel({ lojas, colab, revsByLoja, onUpdateLoja, onSaveColab, onDel
         {/* ---------------- LOJAS ---------------- */}
         {aba === "lojas" && (
           <div>
-            <input className="rt-input" value={busca} placeholder="Buscar marca para editar…"
-              onChange={(e) => setBusca(e.target.value)} />
+            <div style={{ display: "flex", gap: 8 }}>
+              <input className="rt-input" value={busca} placeholder="Buscar marca para editar…"
+                onChange={(e) => setBusca(e.target.value)} />
+              <button className="rt-btn" style={{ whiteSpace: "nowrap" }}
+                onClick={() => setNovaLoja({ nome: "", segmento: "Feminina", shopping: "M", telefone: "", instagram: "" })}>
+                + Nova
+              </button>
+            </div>
             <p className="rt-hint" style={{ margin: "8px 0" }}>
               A estrela ⭐ fixa a marca na primeira tela do app.
             </p>
+
+            {novaLoja && (
+              <div className="rt-loja-adm" style={{ borderColor: "var(--red)" }}>
+                <p className="rt-block-lab" style={{ marginTop: 0 }}>Adicionar marca ao roteiro</p>
+                <div className="rt-mini-form">
+                  <input className="rt-input" value={novaLoja.nome} placeholder="Nome da marca"
+                    onChange={(e) => setNovaLoja({ ...novaLoja, nome: e.target.value })} autoFocus />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <select className="rt-input" value={novaLoja.shopping}
+                      onChange={(e) => setNovaLoja({ ...novaLoja, shopping: e.target.value })}>
+                      {Object.entries(SHOPPINGS).map(([k, v]) => <option key={k} value={k}>{v.nome}</option>)}
+                    </select>
+                    <select className="rt-input" value={novaLoja.segmento}
+                      onChange={(e) => setNovaLoja({ ...novaLoja, segmento: e.target.value })}>
+                      {Object.keys(ICONES).map((sg) => <option key={sg} value={sg}>{sg}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input className="rt-input" value={novaLoja.telefone} placeholder="Telefone"
+                      onChange={(e) => setNovaLoja({ ...novaLoja, telefone: e.target.value })} />
+                    <input className="rt-input" value={novaLoja.instagram} placeholder="Instagram"
+                      onChange={(e) => setNovaLoja({ ...novaLoja, instagram: e.target.value })} />
+                  </div>
+                  <div className="rt-save-row">
+                    <button className="rt-btn" disabled={!novaLoja.nome.trim()}
+                      onClick={async () => { const ok = await onCriarLoja(novaLoja); if (ok) setNovaLoja(null); }}>
+                      Adicionar
+                    </button>
+                    <button className="rt-btn ghost" onClick={() => setNovaLoja(null)}>Cancelar</button>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="rt-admin-lista">
               {lojasFiltradas.slice(0, 30).map((l) => (
                 <AdminLojaRow key={l.id} l={l} info={colab[l.id]} salvando={salvandoId === l.id}
@@ -874,13 +928,23 @@ function AdminLojaRow({ l, info, salvando, onSave, onDestaque }) {
   const [tel, setTel] = useState(l.tel || "");
   const [insta, setInsta] = useState(l.insta || "");
   const [ticket, setTicket] = useState(info && info.t != null ? String(info.t) : "");
+  const [pmin, setPmin] = useState(info && info.mn != null ? String(info.mn) : "");
+  const [pmax, setPmax] = useState(info && info.mx != null ? String(info.mx) : "");
   const [tipos, setTipos] = useState((info && info.p ? info.p.join(", ") : ""));
   const [vibe, setVibe] = useState((info && info.v) || "");
+  const [pmin2, setPmin2] = useState((info && info.min) || "");
+  const [pag, setPag] = useState((info && info.pag) || "");
+  const [grade, setGrade] = useState((info && info.gr) || "");
 
   const sujoLoja = nome !== l.nome || tel !== (l.tel || "") || insta !== (l.insta || "");
   const sujoColab = ticket !== (info && info.t != null ? String(info.t) : "")
+    || pmin !== (info && info.mn != null ? String(info.mn) : "")
+    || pmax !== (info && info.mx != null ? String(info.mx) : "")
     || tipos !== (info && info.p ? info.p.join(", ") : "")
-    || vibe !== ((info && info.v) || "");
+    || vibe !== ((info && info.v) || "")
+    || pmin2 !== ((info && info.min) || "")
+    || pag !== ((info && info.pag) || "")
+    || grade !== ((info && info.gr) || "");
 
   const salvar = () => {
     const n = parseFloat(String(ticket).replace(",", "."));
@@ -888,8 +952,10 @@ function AdminLojaRow({ l, info, salvando, onSave, onDestaque }) {
       sujoLoja ? { nome, telefone: tel || null, instagram: insta || null } : null,
       sujoColab ? {
         t: isNaN(n) ? null : Math.round(n),
+        mn: pmin ? Math.round(parseFloat(pmin.replace(",", "."))) : null,
+        mx: pmax ? Math.round(parseFloat(pmax.replace(",", "."))) : null,
         p: tipos.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean),
-        v: vibe.trim(),
+        v: vibe.trim(), min: pmin2.trim() || null, pag: pag.trim() || null, gr: grade.trim() || null,
       } : null
     );
   };
@@ -918,16 +984,34 @@ function AdminLojaRow({ l, info, salvando, onSave, onDestaque }) {
             <input className="rt-input" value={insta} placeholder="Instagram" onChange={(e) => setInsta(e.target.value)} />
           </div>
           <div className="rt-money">
-            <span>Ticket médio R$</span>
-            <input className="rt-input" style={{ maxWidth: 110 }} inputMode="decimal" value={ticket}
-              placeholder="0" onChange={(e) => setTicket(e.target.value)} />
-            <span>/ peça</span>
+            <span>Preço R$</span>
+            <input className="rt-input" style={{ maxWidth: 82 }} inputMode="decimal" value={pmin}
+              placeholder="de" onChange={(e) => { setPmin(e.target.value); if (!ticket) setTicket(e.target.value); }} />
+            <span>até</span>
+            <input className="rt-input" style={{ maxWidth: 82 }} inputMode="decimal" value={pmax}
+              placeholder="até" onChange={(e) => setPmax(e.target.value)} />
           </div>
+          <div className="rt-money">
+            <span>Ticket médio R$</span>
+            <input className="rt-input" style={{ maxWidth: 90 }} inputMode="decimal" value={ticket}
+              placeholder="0" onChange={(e) => setTicket(e.target.value)} />
+          </div>
+          <p className="rt-hint" style={{ margin: 0 }}>
+            A faixa (de/até) é o que faz a marca aparecer nos filtros de preço.
+          </p>
           <input className="rt-input" value={tipos} placeholder="Tipos de peça, separados por vírgula"
             onChange={(e) => setTipos(e.target.value)} />
-          <input className="rt-input" value={vibe} maxLength={90}
-            placeholder="Personalidade da marca (até 90 caracteres)"
+          <input className="rt-input" value={vibe} maxLength={140}
+            placeholder="Que tipo de loja compra mais dessa marca"
             onChange={(e) => setVibe(e.target.value)} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="rt-input" value={pmin2} placeholder="Pedido mínimo"
+              onChange={(e) => setPmin2(e.target.value)} />
+            <input className="rt-input" value={grade} placeholder="Grade de tamanhos"
+              onChange={(e) => setGrade(e.target.value)} />
+          </div>
+          <input className="rt-input" value={pag} placeholder="Formas de pagamento"
+            onChange={(e) => setPag(e.target.value)} />
           {(sujoLoja || sujoColab) && (
             <button className="rt-btn" disabled={salvando} onClick={salvar}>
               {salvando ? "Salvando…" : "Salvar alterações"}
@@ -1014,7 +1098,7 @@ export default function App() {
     const { data, error } = await supabase.from("loja_colab").select("*");
     if (!error && data) {
       const m = {};
-      data.forEach((c) => { m[c.loja_id] = { t: c.ticket_medio, p: c.tipos_peca || [], v: c.personalidade }; });
+      data.forEach((c) => { m[c.loja_id] = { t: c.ticket_medio, mn: c.preco_min, mx: c.preco_max, p: c.tipos_peca || [], v: c.personalidade, min: c.pedido_minimo, pag: c.formas_pagamento, gr: c.grade_tamanhos }; });
       setColab(m);
     }
   }, []);
@@ -1065,7 +1149,7 @@ export default function App() {
       atualizado_por: session.user.id, atualizado_em: new Date().toISOString(),
     });
     if (error) { setErro(true); return false; }
-    setColab((prev) => ({ ...prev, [lojaId]: patch }));
+    setColab((prev) => ({ ...prev, [lojaId]: { ...(prev[lojaId] || {}), ...patch } }));
     setErro(false);
     return true;
   }, [session]);
@@ -1146,6 +1230,17 @@ export default function App() {
     }
   };
 
+  const criarLoja = async (nova) => {
+    const { data, error } = await supabase.from("lojas").insert({
+      nome: nova.nome.trim(), segmento: nova.segmento, shopping: nova.shopping,
+      telefone: nova.telefone.trim() || null, instagram: nova.instagram.trim() || null,
+      exclusiva: true,
+    }).select().single();
+    if (error) { setErro(true); return false; }
+    setLojas((prev) => [...prev, mapLoja(data)].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")));
+    return true;
+  };
+
   const reordenarDestaque = async (l, dir) => {
     const lista = lojas.filter((x) => x.destaque).sort((a, b) => a.ordem - b.ordem);
     const i = lista.findIndex((x) => x.id === l.id);
@@ -1162,10 +1257,12 @@ export default function App() {
 
   const salvarColabAdmin = async (lojaId, patch) => {
     const { error } = await supabase.from("loja_colab").upsert({
-      loja_id: lojaId, ticket_medio: patch.t, tipos_peca: patch.p, personalidade: patch.v,
+      loja_id: lojaId, ticket_medio: patch.t, preco_min: patch.mn, preco_max: patch.mx,
+      tipos_peca: patch.p, personalidade: patch.v, pedido_minimo: patch.min,
+      formas_pagamento: patch.pag, grade_tamanhos: patch.gr,
       atualizado_por: session.user.id, atualizado_em: new Date().toISOString(),
     });
-    if (!error) setColab((prev) => ({ ...prev, [lojaId]: patch }));
+    if (!error) setColab((prev) => ({ ...prev, [lojaId]: { ...(prev[lojaId] || {}), ...patch } }));
     return !error;
   };
 
@@ -1191,7 +1288,13 @@ export default function App() {
       }
       if (catAtiva !== "todos" && l.segmento !== catAtiva) return false;
       if (shop !== "todos" && l.sh !== shop) return false;
-      if (f && f.test && !f.test(d ? d.t : null)) return false;
+      if (f && f.faixa) {
+        // a marca entra na faixa se o intervalo de preco dela encostar nela
+        if (!d || d.t == null) return false;
+        const mn = d.mn != null ? d.mn : d.t;
+        const mx = d.mx != null ? d.mx : d.t;
+        if (mn > f.faixa[1] || mx < f.faixa[0]) return false;
+      }
       if (soFav && !favs.includes(l.id)) return false;
       return true;
     });
@@ -1375,7 +1478,7 @@ export default function App() {
       {mostrarComo && <ComoFuncionaModal onClose={() => setMostrarComo(false)} />}
       {mostrarAdmin && (
         <AdminPanel lojas={lojas} colab={colab} revsByLoja={revs} onUpdateLoja={updateLojaAdmin}
-          onSaveColab={salvarColabAdmin} onDeleteReview={deleteReviewAdmin}
+          onSaveColab={salvarColabAdmin} onCriarLoja={criarLoja} onDeleteReview={deleteReviewAdmin}
           onDestaque={toggleDestaque} onReordenar={reordenarDestaque}
           onClose={() => setMostrarAdmin(false)} />
       )}
