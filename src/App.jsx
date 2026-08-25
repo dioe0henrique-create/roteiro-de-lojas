@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "./supabaseClient";
-import { PRIMAVERA_WHATSAPP, SHOPPING_INFO, SHOPPINGS, ICONES, SUGESTOES, FAIXAS } from "./lib/constants";
-import { norm, iniciais, waLink, igLink, dataCurta, dataBR, maskCNPJ, maskTelefone, media, statusMarca } from "./lib/helpers";
+import { APP_NOME, PRIMAVERA_WHATSAPP, SHOPPING_INFO, SHOPPINGS, ICONES, SUGESTOES, FAIXAS } from "./lib/constants";
+import { norm, iniciais, waLink, igLink, dataCurta, dataBR, maskDoc, docOk, tipoDoc, UFS, maskTelefone, media, statusMarca } from "./lib/helpers";
 
 // ---------------------------------------------------------------------------
 // Peças pequenas de UI
@@ -65,6 +65,7 @@ function Card({ l, info, revs, isFav, onOpen, onFav }) {
       )}
 
       <div className="rt-status">
+        {l.destaque && <span className="rt-selo-ind">Indicada</span>}
         {m != null && <Stars value={m} />}
         <span className={"rt-status-txt " + st.tone}>{st.label}</span>
       </div>
@@ -75,7 +76,12 @@ function Card({ l, info, revs, isFav, onOpen, onFav }) {
 function Sheet({ l, info, revs, session, perfil, onSaveInfo, onAddReview, onFav, isFav, onRequireLogin, onClose }) {
   const s = SHOPPINGS[l.sh];
   const rep = !l.exc;
-  const wa = waLink(l.tel);
+  const quem = perfil
+    ? `Oi! Sou ${perfil.nome_completo || perfil.nome}, da ${perfil.nome}` +
+      (perfil.cidade ? `, de ${perfil.cidade}${perfil.estado ? "-" + perfil.estado : ""}` : "") +
+      `. Vim pelo ${APP_NOME}. Queria saber sobre `
+    : "";
+  const wa = waLink(l.tel, quem ? quem + "as pe\u00e7as de voc\u00eas." : null);
   const ig = igLink(l.insta);
   const st = statusMarca(revs);
   const m = media(revs);
@@ -289,27 +295,163 @@ function ShoppingsModal({ onClose }) {
 
 function ComoFuncionaModal({ onClose }) {
   return (
-    <div className="rt-backdrop" style={{ alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
-      <div className="rt-modal-c" onClick={(e) => e.stopPropagation()}>
+    <div className="rt-backdrop" style={{ alignItems: "flex-start", justifyContent: "center", padding: 20 }} onClick={onClose}>
+      <div className="rt-modal-c" style={{ maxWidth: 620 }} onClick={(e) => e.stopPropagation()}>
         <h3 className="rt-modal-t">Como funciona</h3>
-        <ol className="rt-steps" style={{ marginTop: 14 }}>
+        <p className="rt-hint">Do cadastro at\u00e9 a mercadoria chegar na sua loja.</p>
+        <ol className="rt-steps" style={{ marginTop: 16 }}>
           <li><span className="rt-step-n">01</span><div className="rt-step-txt">
-            <b>Navegue à vontade</b><p>Segmento, faixa de preço, o que a comunidade já avaliou — isso fica sempre aberto pra qualquer lojista.</p>
+            <b>Voc\u00ea se cadastra</b>
+            <p>Leva 1 minuto e libera as 336 marcas dos 3 shoppings do polo, com telefone
+            e Instagram de cada uma. Sem custo.</p>
           </div></li>
           <li><span className="rt-step-n">02</span><div className="rt-step-txt">
-            <b>Fala direto no WhatsApp</b><p>Achou a loja certa? Um toque abre a conversa direto com ela — sem intermediário, sem esperar aprovação.</p>
+            <b>Procura do seu jeito</b>
+            <p>Por tipo de pe\u00e7a, faixa de pre\u00e7o, shopping ou segmento. D\u00e1 pra favoritar
+            o que gostou e ver o que outras lojistas avaliaram.</p>
           </div></li>
           <li><span className="rt-step-n">03</span><div className="rt-step-txt">
-            <b>O fechamento é sempre direto</b><p>Entre você e a loja, do jeito que já funciona hoje — presencial ou com a consultora da marca.</p>
+            <b>Fala direto com a marca</b>
+            <p>Um toque abre o WhatsApp da loja com sua apresenta\u00e7\u00e3o pronta. Quem entende
+            de pre\u00e7o, promo\u00e7\u00e3o e novidade \u00e9 a pr\u00f3pria marca \u2014 ent\u00e3o voc\u00ea negocia com quem sabe.</p>
           </div></li>
           <li><span className="rt-step-n">04</span><div className="rt-step-txt">
-            <b>A gente cuida do resto</b><p>Viagem quinzenal (Cianorte + Maringá, sem custo de passagem e hospedagem pro CNPJ), entrega sem frete na região e troca garantida na próxima viagem pra maioria das marcas.</p>
+            <b>A loja vende pra voc\u00ea</b>
+            <p>A venda \u00e9 direta, com nota no seu nome. Sem atravessador e sem intermedi\u00e1rio
+            no meio do pre\u00e7o.</p>
+          </div></li>
+          <li><span className="rt-step-n">05</span><div className="rt-step-txt">
+            <b>Eu junto tudo e despacho</b>
+            <p>Comprou de 3 marcas diferentes? Eu recolho em cada loja, monto um pacote s\u00f3
+            e envio direto do polo pro seu endere\u00e7o. Voc\u00ea n\u00e3o precisa vir at\u00e9 aqui.</p>
+          </div></li>
+          <li><span className="rt-step-n">06</span><div className="rt-step-txt">
+            <b>Quer ajuda pra escolher?</b>
+            <p>Pe\u00e7a a curadoria gr\u00e1tis no bot\u00e3o l\u00e1 embaixo. Eu olho o perfil da sua loja e
+            monto uma lista com as marcas que mais fazem sentido pro seu p\u00fablico.</p>
           </div></li>
         </ol>
         <div className="rt-quem">
-          Há 10+ anos levando lojistas ao polo atacadista do Paraná. Viagens quinzenais + pedidos online direto das fábricas. Do embarque à entrega, a gente cuida de tudo.
+          <b>Prefere ir pessoalmente?</b> A viagem quinzenal continua acontecendo \u2014
+          Cianorte e Maring\u00e1 no mesmo pacote. Chama no WhatsApp que eu te explico.
         </div>
         <div style={{ marginTop: 16 }}><button className="rt-btn ghost" onClick={onClose}>Fechar</button></div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Curadoria assistida (funil)
+// ---------------------------------------------------------------------------
+const CUR_PERGUNTAS = [
+  { id: "faixa", multi: false, titulo: "Quanto voc\u00ea compra por m\u00eas, mais ou menos?",
+    ops: ["At\u00e9 R$ 5 mil", "R$ 5 a 10 mil", "R$ 10 a 20 mil", "Mais de R$ 20 mil", "Ainda n\u00e3o compro"] },
+  { id: "canal", multi: false, titulo: "Como voc\u00ea vende hoje?",
+    ops: ["Loja f\u00edsica", "F\u00edsica + online", "S\u00f3 online", "Sacoleira / pronta-entrega", "WhatsApp e redes"] },
+  { id: "onde", multi: true, titulo: "Onde voc\u00ea compra hoje?",
+    ops: ["Polo do Paran\u00e1", "Br\u00e1s (SP)", "Goi\u00e2nia", "Agreste (PE)", "Online direto das marcas", "Representante me visita", "Ainda n\u00e3o compro"] },
+  { id: "segmentos", multi: true, titulo: "O que mais sai na sua loja?",
+    ops: ["Feminina", "Masculina", "Jeans", "Infantil", "Plus Size Feminina", "Evang\u00e9lica", "\u00cdntima & Fitness", "Acess\u00f3rios", "Perfumaria & Casa"] },
+  { id: "tempo", multi: false, titulo: "H\u00e1 quanto tempo tem a loja?",
+    ops: ["Come\u00e7ando agora", "At\u00e9 1 ano", "1 a 3 anos", "Mais de 3 anos"] },
+  { id: "frete", multi: false, titulo: "Costuma pagar frete?",
+    ops: ["Sim, sempre", "\u00c0s vezes", "Nunca paguei"] },
+  { id: "guia", multi: false, titulo: "J\u00e1 tem algu\u00e9m que te acompanha nas compras?",
+    ops: ["N\u00e3o, vou por conta", "Sim, tenho um guia", "Vou com excurs\u00e3o"] },
+];
+
+function CuradoriaModal({ perfil, onEnviar, onClose }) {
+  const [resp, setResp] = useState({});
+  const [obs, setObs] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [pronto, setPronto] = useState(false);
+
+  const marcar = (q, op) => {
+    setResp((r) => {
+      if (!q.multi) return { ...r, [q.id]: op };
+      const atual = r[q.id] || [];
+      return { ...r, [q.id]: atual.includes(op) ? atual.filter((x) => x !== op) : [...atual, op] };
+    });
+  };
+  const ativo = (q, op) => {
+    const v = resp[q.id];
+    return q.multi ? (v || []).includes(op) : v === op;
+  };
+  const respondidas = CUR_PERGUNTAS.filter((q) => {
+    const v = resp[q.id];
+    return q.multi ? (v || []).length > 0 : !!v;
+  }).length;
+
+  const enviar = async () => {
+    setEnviando(true);
+    const ok = await onEnviar({ ...resp, observacao: obs.trim() });
+    setEnviando(false);
+    if (ok) setPronto(true);
+  };
+
+  if (pronto) {
+    return (
+      <div className="rt-backdrop" style={{ alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+        <div className="rt-modal-c" onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 40 }}>\ud83d\udc9b</div>
+          <h3 className="rt-modal-t">Recebi!</h3>
+          <p className="rt-hint" style={{ fontSize: 14 }}>
+            Vou olhar seu perfil com calma e te chamo no WhatsApp em at\u00e9 24h com as marcas
+            que mais fazem sentido pra sua loja.
+          </p>
+          <button className="rt-btn" onClick={onClose}>Voltar pro roteiro</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rt-backdrop" style={{ alignItems: "flex-start", justifyContent: "center", padding: 20 }} onClick={onClose}>
+      <div className="rt-modal-c" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
+        <h3 className="rt-modal-t">Receba uma curadoria gr\u00e1tis</h3>
+        <p className="rt-hint" style={{ fontSize: 13 }}>
+          Me conta como \u00e9 sua loja e eu monto uma lista com as marcas mais lucrativas pro seu
+          p\u00fablico \u2014 sem custo, sem compromisso. Leva 1 minuto, tudo em toques.
+        </p>
+
+        <div className="rt-cur-prog">
+          <div className="rt-cur-prog-bar" style={{ width: `${(respondidas / CUR_PERGUNTAS.length) * 100}%` }} />
+        </div>
+
+        {CUR_PERGUNTAS.map((q) => (
+          <div className="rt-cur-q" key={q.id}>
+            <p className="rt-cur-tit">
+              {q.titulo}
+              {q.multi && <span className="rt-cur-multi">pode marcar mais de uma</span>}
+            </p>
+            <div className="rt-cur-ops">
+              {q.ops.map((op) => (
+                <button key={op} className="rt-cur-op" data-on={ativo(q, op) ? "1" : "0"}
+                  onClick={() => marcar(q, op)}>{op}</button>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <div className="rt-cur-q">
+          <p className="rt-cur-tit">Quer contar mais alguma coisa? <span className="rt-cur-multi">opcional</span></p>
+          <textarea className="rt-area" value={obs} placeholder="O que voc\u00ea procura, dificuldade que tem, o que n\u00e3o quer\u2026"
+            onChange={(e) => setObs(e.target.value)} />
+        </div>
+
+        <div className="rt-save-row" style={{ marginTop: 14 }}>
+          <button className="rt-btn" onClick={enviar} disabled={enviando || respondidas < 3}>
+            {enviando ? "Enviando\u2026" : "Quero minha curadoria"}
+          </button>
+          <button className="rt-btn ghost" onClick={onClose}>Agora n\u00e3o</button>
+        </div>
+        {respondidas < 3 && (
+          <p className="rt-hint" style={{ margin: "8px 0 0" }}>Responde pelo menos 3 pra eu conseguir te ajudar direito.</p>
+        )}
+        <p className="rt-hint" style={{ margin: "10px 0 0", fontSize: 11 }}>
+          Vou usar seus dados de cadastro ({(perfil && perfil.nome) || "sua loja"}) pra te chamar no WhatsApp.
+        </p>
       </div>
     </div>
   );
@@ -321,15 +463,18 @@ function AuthModal({ onClose }) {
   const [nomeCompleto, setNomeCompleto] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
   const [dataNasc, setDataNasc] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [msg, setMsg] = useState("");
 
-  const cnpjOk = cnpj.replace(/\D/g, "").length === 14;
+  const cnpjOk = docOk(cnpj);
   const telOk = telefone.replace(/\D/g, "").length >= 10;
-  const criarOk = nome.trim() && nomeCompleto.trim() && cnpjOk && telOk && dataNasc && email && senha;
+  const criarOk = nome.trim() && nomeCompleto.trim() && cnpjOk && telOk
+    && cidade.trim() && estado && email && senha;
 
   const enviar = async () => {
     setCarregando(true);
@@ -348,6 +493,8 @@ function AuthModal({ onClose }) {
             nome_completo: nomeCompleto.trim(),
             cnpj: cnpj.trim(),
             telefone: telefone.trim(),
+            cidade: cidade.trim(),
+            estado: estado,
             data_nascimento: dataNasc,
           },
         },
@@ -377,12 +524,29 @@ function AuthModal({ onClose }) {
                 onChange={(e) => setNome(e.target.value)} />
               <input className="rt-input" value={nomeCompleto} placeholder="Seu nome completo"
                 onChange={(e) => setNomeCompleto(e.target.value)} />
-              <input className="rt-input" value={cnpj} placeholder="CNPJ" inputMode="numeric"
-                onChange={(e) => setCnpj(maskCNPJ(e.target.value))} />
+              <div>
+                <input className="rt-input" value={cnpj} placeholder="CNPJ ou CPF" inputMode="numeric"
+                  onChange={(e) => setCnpj(maskDoc(e.target.value))} />
+                <span style={{ fontSize: 11, color: "var(--muted)", display: "block", marginTop: 4 }}>
+                  {cnpj ? (cnpjOk ? `\u2713 ${tipoDoc(cnpj)}` : "Continue digitando\u2026")
+                        : "Ainda n\u00e3o tem CNPJ? Pode usar seu CPF."}
+                </span>
+              </div>
               <input className="rt-input" value={telefone} placeholder="Telefone / WhatsApp" inputMode="tel"
                 onChange={(e) => setTelefone(maskTelefone(e.target.value))} />
+              <div style={{ display: "flex", gap: 8 }}>
+                <input className="rt-input" value={cidade} placeholder="Sua cidade" style={{ flex: 1 }}
+                  onChange={(e) => setCidade(e.target.value)} />
+                <select className="rt-input" value={estado} style={{ maxWidth: 92 }}
+                  onChange={(e) => setEstado(e.target.value)}>
+                  <option value="">UF</option>
+                  {UFS.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
               <div>
-                <span style={{ fontSize: 12, color: "var(--muted)", display: "block", marginBottom: 4 }}>Data de nascimento</span>
+                <span style={{ fontSize: 12, color: "var(--muted)", display: "block", marginBottom: 4 }}>
+                  Data de nascimento <em style={{ fontStyle: "normal", opacity: .7 }}>(opcional)</em>
+                </span>
                 <input className="rt-input" type="date" value={dataNasc}
                   onChange={(e) => setDataNasc(e.target.value)} />
               </div>
@@ -427,7 +591,7 @@ function PerfilModal({ perfil, favsCount, onSaveNome, onLogout, onClose }) {
   );
 }
 
-function AdminPanel({ lojas, revsByLoja, onUpdateLoja, onDeleteReview, onClose }) {
+function AdminPanel({ lojas, revsByLoja, onUpdateLoja, onDeleteReview, onDestaque, onClose }) {
   const [salvandoId, setSalvandoId] = useState(null);
   const [busca, setBusca] = useState("");
   const [buscaUser, setBuscaUser] = useState("");
@@ -470,7 +634,8 @@ function AdminPanel({ lojas, revsByLoja, onUpdateLoja, onDeleteReview, onClose }
         <input className="rt-input" value={busca} placeholder="Buscar loja para editar…" onChange={(e) => setBusca(e.target.value)} />
         <div style={{ maxHeight: 320, overflowY: "auto", marginTop: 10 }}>
           {filtradas.slice(0, 40).map((l) => (
-            <AdminLojaRow key={l.id} l={l} salvando={salvandoId === l.id} onSave={(patch) => salvarLinha(l, patch)} />
+            <AdminLojaRow key={l.id} l={l} salvando={salvandoId === l.id}
+              onSave={(patch) => salvarLinha(l, patch)} onDestaque={onDestaque} />
           ))}
           {filtradas.length > 40 && <p className="rt-hint">Mostrando as 40 primeiras — refine a busca pra achar outras.</p>}
         </div>
@@ -523,14 +688,19 @@ function AdminPanel({ lojas, revsByLoja, onUpdateLoja, onDeleteReview, onClose }
   );
 }
 
-function AdminLojaRow({ l, salvando, onSave }) {
+function AdminLojaRow({ l, salvando, onSave, onDestaque }) {
   const [nome, setNome] = useState(l.nome);
   const [tel, setTel] = useState(l.tel || "");
   const [insta, setInsta] = useState(l.insta || "");
   const sujo = nome !== l.nome || tel !== (l.tel || "") || insta !== (l.insta || "");
   return (
     <div className="rt-mini-form" style={{ borderBottom: "1px solid var(--rule)", paddingBottom: 10, marginBottom: 10 }}>
-      <input className="rt-input" value={nome} onChange={(e) => setNome(e.target.value)} />
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <button className="rt-star-btn" data-on={l.destaque ? "1" : "0"}
+          title={l.destaque ? "Tirar dos destaques" : "Destacar na primeira p\u00e1gina"}
+          onClick={() => onDestaque(l)}>{l.destaque ? "\u2605" : "\u2606"}</button>
+        <input className="rt-input" value={nome} style={{ flex: 1 }} onChange={(e) => setNome(e.target.value)} />
+      </div>
       <div style={{ display: "flex", gap: 8 }}>
         <input className="rt-input" value={tel} placeholder="Telefone" onChange={(e) => setTel(e.target.value)} />
         <input className="rt-input" value={insta} placeholder="Instagram" onChange={(e) => setInsta(e.target.value)} />
@@ -569,6 +739,7 @@ export default function App() {
   const [mostrarShoppings, setMostrarShoppings] = useState(false);
   const [mostrarComo, setMostrarComo] = useState(false);
   const [mostrarAdmin, setMostrarAdmin] = useState(false);
+  const [mostrarCuradoria, setMostrarCuradoria] = useState(false);
   const [csv, setCsv] = useState(null);
 
   // sessão
@@ -581,6 +752,7 @@ export default function App() {
   const mapLoja = (l) => ({
     id: l.id, nome: l.nome, segmento: l.segmento, sh: l.shopping,
     tel: l.telefone || null, insta: l.instagram || null, exc: !!l.exclusiva,
+    destaque: !!l.destaque, ordem: l.destaque_ordem == null ? 999 : l.destaque_ordem,
   });
 
   const carregarLojas = useCallback(async (logado) => {
@@ -679,6 +851,24 @@ export default function App() {
     }
   }, [session, favs]);
 
+  const enviarCuradoria = async (dados) => {
+    if (!session) { setMostrarAuth(true); return false; }
+    const { error } = await supabase.from("consultorias").insert({
+      usuario_id: session.user.id,
+      faixa_compra: dados.faixa || null,
+      canal_venda: dados.canal || null,
+      onde_compra: dados.onde || [],
+      segmentos: dados.segmentos || [],
+      tempo_loja: dados.tempo || null,
+      frete: dados.frete || null,
+      guia: dados.guia || null,
+      observacao: dados.observacao || null,
+    });
+    if (error) { setErro(true); return false; }
+    setErro(false);
+    return true;
+  };
+
   const salvarNomePerfil = async (nome) => {
     if (!session) return;
     await supabase.from("perfis").update({ nome: nome || "Lojista" }).eq("id", session.user.id);
@@ -695,6 +885,17 @@ export default function App() {
     const { error } = await supabase.from("lojas").update(patch).eq("id", id);
     if (!error) setLojas((prev) => prev.map((l) => (l.id === id ? { ...l, nome: patch.nome, tel: patch.telefone, insta: patch.instagram } : l)));
     return !error;
+  };
+
+  const toggleDestaque = async (l) => {
+    const novo = !l.destaque;
+    const ordem = novo ? lojas.filter((x) => x.destaque).length + 1 : null;
+    const { error } = await supabase.from("lojas")
+      .update({ destaque: novo, destaque_ordem: ordem }).eq("id", l.id);
+    if (!error) {
+      setLojas((prev) => prev.map((x) => (x.id === l.id
+        ? { ...x, destaque: novo, ordem: ordem == null ? 999 : ordem } : x)));
+    }
   };
 
   const deleteReviewAdmin = async (reviewId, lojaId) => {
@@ -724,6 +925,18 @@ export default function App() {
       return true;
     });
   }, [busca, catAtiva, shop, faixa, soFav, colab, favs, lojas]);
+
+  // Destaques sobem pro topo, mas so na navegacao livre. Se ela buscou ou
+  // filtrou, manda o que ela procurou.
+  const navegandoLivre = !busca && catAtiva === "todos" && shop === "todos" && faixa === "todas" && !soFav;
+  const ordenadas = useMemo(() => {
+    if (!navegandoLivre) return filtradas;
+    return [...filtradas].sort((a, b) => {
+      if (a.destaque !== b.destaque) return a.destaque ? -1 : 1;
+      if (a.destaque && b.destaque) return a.ordem - b.ordem;
+      return 0;
+    });
+  }, [filtradas, navegandoLivre]);
 
   const totalAvaliacoes = useMemo(() => Object.values(revs).reduce((s, r) => s + r.length, 0), [revs]);
   const lojistasAtivos = useMemo(() => {
@@ -833,7 +1046,7 @@ export default function App() {
               </div>
             ) : (
               <div className="rt-feed">
-                {filtradas.map((l) => (
+                {ordenadas.map((l) => (
                   <Card key={l.id} l={l} info={colab[l.id]} revs={revs[l.id]}
                     isFav={favs.includes(l.id)} onOpen={setAberta} onFav={toggleFav} />
                 ))}
@@ -859,6 +1072,9 @@ export default function App() {
           onRequireLogin={() => setMostrarAuth(true)} onClose={() => setAberta(null)} />
       )}
 
+      {mostrarCuradoria && (
+        <CuradoriaModal perfil={perfil} onEnviar={enviarCuradoria} onClose={() => setMostrarCuradoria(false)} />
+      )}
       {mostrarAuth && <AuthModal onClose={() => setMostrarAuth(false)} />}
       {mostrarPerfil && (
         <PerfilModal perfil={perfil} favsCount={favs.length} onSaveNome={salvarNomePerfil} onLogout={sair} onClose={() => setMostrarPerfil(false)} />
@@ -866,7 +1082,8 @@ export default function App() {
       {mostrarShoppings && <ShoppingsModal onClose={() => setMostrarShoppings(false)} />}
       {mostrarComo && <ComoFuncionaModal onClose={() => setMostrarComo(false)} />}
       {mostrarAdmin && (
-        <AdminPanel lojas={lojas} revsByLoja={revs} onUpdateLoja={updateLojaAdmin} onDeleteReview={deleteReviewAdmin} onClose={() => setMostrarAdmin(false)} />
+        <AdminPanel lojas={lojas} revsByLoja={revs} onUpdateLoja={updateLojaAdmin}
+          onDeleteReview={deleteReviewAdmin} onDestaque={toggleDestaque} onClose={() => setMostrarAdmin(false)} />
       )}
 
       {csv !== null && (
