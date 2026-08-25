@@ -591,129 +591,354 @@ function PerfilModal({ perfil, favsCount, onSaveNome, onLogout, onClose }) {
   );
 }
 
-function AdminPanel({ lojas, revsByLoja, onUpdateLoja, onDeleteReview, onDestaque, onClose }) {
-  const [salvandoId, setSalvandoId] = useState(null);
+function AdminPanel({ lojas, colab, revsByLoja, onUpdateLoja, onSaveColab, onDeleteReview, onDestaque, onReordenar, onClose }) {
+  const [aba, setAba] = useState("resumo");
+  const [curadorias, setCuradorias] = useState(null);
+  const [lojistas, setLojistas] = useState(null);
   const [busca, setBusca] = useState("");
   const [buscaUser, setBuscaUser] = useState("");
-  const [usuarios, setUsuarios] = useState(null); // null = carregando
-  const filtradas = lojas.filter((l) => norm(l.nome).includes(norm(busca)));
+  const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [salvandoId, setSalvandoId] = useState(null);
 
   useEffect(() => {
-    supabase.from("perfis").select("*").order("created_at", { ascending: false }).then(({ data, error }) => {
-      setUsuarios(error ? [] : data);
-    });
+    supabase.from("consultorias").select("*").order("created_at", { ascending: false })
+      .then(({ data }) => setCuradorias(data || []));
+    supabase.from("perfis").select("*").order("created_at", { ascending: false })
+      .then(({ data }) => setLojistas(data || []));
   }, []);
 
-  const usuariosFiltrados = (usuarios || []).filter((u) =>
-    norm(u.nome).includes(norm(buscaUser)) ||
-    norm(u.nome_completo || "").includes(norm(buscaUser)) ||
-    (u.cnpj || "").includes(buscaUser)
-  );
+  const perfilDe = (uid) => (lojistas || []).find((u) => u.id === uid) || {};
 
-  const salvarLinha = async (l, patch) => {
-    setSalvandoId(l.id);
-    await onUpdateLoja(l.id, patch);
-    setSalvandoId(null);
+  const mudarStatus = async (c, novoStatus) => {
+    await supabase.from("consultorias").update({ status: novoStatus }).eq("id", c.id);
+    setCuradorias((prev) => prev.map((x) => (x.id === c.id ? { ...x, status: novoStatus } : x)));
   };
 
-  const todasReviews = useMemo(() => {
-    const out = [];
-    Object.entries(revsByLoja).forEach(([lojaId, lista]) => {
-      const l = lojas.find((x) => x.id === lojaId);
-      lista.forEach((r) => out.push({ ...r, lojaNome: l ? l.nome : lojaId }));
-    });
-    return out.sort((a, b) => (a.data < b.data ? 1 : -1));
-  }, [revsByLoja, lojas]);
+  const curFiltradas = (curadorias || []).filter(
+    (c) => filtroStatus === "todos" || c.status === filtroStatus
+  );
+  const novos = (curadorias || []).filter((c) => c.status === "novo").length;
+
+  const destaques = lojas.filter((l) => l.destaque).sort((a, b) => a.ordem - b.ordem);
+  const lojasFiltradas = lojas.filter((l) => norm(l.nome).includes(norm(busca)));
+  const usersFiltrados = (lojistas || []).filter((u) =>
+    norm(u.nome || "").includes(norm(buscaUser)) ||
+    norm(u.nome_completo || "").includes(norm(buscaUser)) ||
+    (u.cnpj || "").includes(buscaUser) ||
+    norm(u.cidade || "").includes(norm(buscaUser))
+  );
+
+  const comDados = lojas.filter((l) => colab[l.id] && colab[l.id].t != null).length;
+  const totalRev = Object.values(revsByLoja).reduce((s, r) => s + r.length, 0);
+
+  const waDe = (u) => {
+    const link = waLink(u.telefone, `Oi ${(u.nome_completo || u.nome || "").split(" ")[0]}! Aqui é do Giro Certo. Vi seu pedido de curadoria e separei umas marcas pra sua loja.`);
+    return link;
+  };
+
+  const baixarCSV = (linhas, nome) => {
+    const csv = linhas.map((r) => r.map((c) => `"${String(c == null ? "" : c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv);
+    a.download = nome;
+    a.click();
+  };
+
+  const ABAS = [
+    { id: "resumo", nome: "Resumo" },
+    { id: "curadorias", nome: `Curadorias${novos ? ` (${novos})` : ""}` },
+    { id: "lojistas", nome: "Lojistas" },
+    { id: "lojas", nome: "Lojas" },
+    { id: "destaques", nome: `Destaques (${destaques.length})` },
+  ];
 
   return (
-    <div className="rt-backdrop" style={{ alignItems: "flex-start", justifyContent: "center", padding: 20 }} onClick={onClose}>
-      <div className="rt-modal-c" style={{ maxWidth: 720 }} onClick={(e) => e.stopPropagation()}>
-        <h3 className="rt-modal-t">Painel Admin</h3>
-
-        <p className="rt-block-lab" style={{ marginTop: 16 }}>Lojas ({lojas.length})</p>
-        <input className="rt-input" value={busca} placeholder="Buscar loja para editar…" onChange={(e) => setBusca(e.target.value)} />
-        <div style={{ maxHeight: 320, overflowY: "auto", marginTop: 10 }}>
-          {filtradas.slice(0, 40).map((l) => (
-            <AdminLojaRow key={l.id} l={l} salvando={salvandoId === l.id}
-              onSave={(patch) => salvarLinha(l, patch)} onDestaque={onDestaque} />
-          ))}
-          {filtradas.length > 40 && <p className="rt-hint">Mostrando as 40 primeiras — refine a busca pra achar outras.</p>}
+    <div className="rt-backdrop" style={{ alignItems: "flex-start", justifyContent: "center" }} onClick={onClose}>
+      <div className="rt-modal-c rt-admin" onClick={(e) => e.stopPropagation()}>
+        <div className="rt-admin-top">
+          <h3 className="rt-modal-t" style={{ margin: 0 }}>Painel Admin</h3>
+          <button className="rt-hero-x" style={{ position: "static", background: "var(--bone)", color: "var(--ink)" }} onClick={onClose}>×</button>
         </div>
 
-        <p className="rt-block-lab" style={{ marginTop: 20 }}>Avaliações recentes ({todasReviews.length})</p>
-        <div style={{ maxHeight: 260, overflowY: "auto" }}>
-          {todasReviews.slice(0, 30).map((r) => (
-            <div className="rt-review" key={r.id}>
-              <div className="rt-review-top">
-                <span className="rt-review-autor">{r.autor} → {r.lojaNome}</span>
-                <span className="rt-review-data">{dataCurta(r.data)}</span>
-              </div>
-              <Stars value={r.nota} />
-              {r.comentario && <p className="rt-review-txt">{r.comentario}</p>}
-              <button className="rt-infolink" style={{ color: "var(--red)" }} onClick={() => onDeleteReview(r.id, r.loja_id)}>
-                Remover
+        <div className="rt-admin-abas">
+          {ABAS.map((a) => (
+            <button key={a.id} className="rt-admin-aba" data-on={aba === a.id ? "1" : "0"}
+              onClick={() => setAba(a.id)}>{a.nome}</button>
+          ))}
+        </div>
+
+        {/* ---------------- RESUMO ---------------- */}
+        {aba === "resumo" && (
+          <div>
+            <div className="rt-kpis">
+              <div className="rt-kpi"><b>{lojistas ? lojistas.length : "—"}</b><span>lojistas cadastradas</span></div>
+              <div className="rt-kpi destaque"><b>{novos}</b><span>curadorias novas</span></div>
+              <div className="rt-kpi"><b>{lojas.length}</b><span>marcas no roteiro</span></div>
+              <div className="rt-kpi"><b>{comDados}</b><span>marcas com preço</span></div>
+              <div className="rt-kpi"><b>{destaques.length}</b><span>marcas indicadas</span></div>
+              <div className="rt-kpi"><b>{totalRev}</b><span>avaliações</span></div>
+            </div>
+            <p className="rt-hint" style={{ marginTop: 14 }}>
+              <b>{lojas.length - comDados}</b> marcas ainda sem preço preenchido — é o que mais
+              ajuda a lojista a decidir. Preencha na aba «Lojas».
+            </p>
+            {novos > 0 && (
+              <button className="rt-btn" style={{ marginTop: 10 }} onClick={() => setAba("curadorias")}>
+                Ver {novos} pedido{novos > 1 ? "s" : ""} de curadoria
               </button>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
 
-        <p className="rt-block-lab" style={{ marginTop: 20 }}>
-          Lojistas cadastrados (CRM) {usuarios ? `(${usuarios.length})` : ""}
-        </p>
-        <input className="rt-input" value={buscaUser} placeholder="Buscar por nome ou CNPJ…"
-          onChange={(e) => setBuscaUser(e.target.value)} />
-        <div style={{ maxHeight: 320, overflowY: "auto", marginTop: 10 }}>
-          {usuarios === null && <p className="rt-hint">Carregando…</p>}
-          {usuarios !== null && usuariosFiltrados.length === 0 && <p className="rt-hint">Ninguém encontrado.</p>}
-          {usuariosFiltrados.slice(0, 60).map((u) => (
-            <div className="rt-review" key={u.id}>
-              <div className="rt-review-top">
-                <span className="rt-review-autor">{u.nome}{u.papel === "admin" ? " · admin" : ""}</span>
-                <span className="rt-review-data">{dataBR(u.created_at ? u.created_at.slice(0, 10) : null) || dataCurta(u.created_at)}</span>
+        {/* ---------------- CURADORIAS ---------------- */}
+        {aba === "curadorias" && (
+          <div>
+            <div className="rt-admin-filtros">
+              {["todos", "novo", "falei", "cliente", "nao"].map((st) => (
+                <button key={st} className="rt-chip" data-on={filtroStatus === st ? "1" : "0"}
+                  onClick={() => setFiltroStatus(st)}>
+                  {st === "todos" ? "Todos" : st === "novo" ? "Novos" : st === "falei" ? "Já falei"
+                    : st === "cliente" ? "Virou cliente" : "Não deu"}
+                </button>
+              ))}
+            </div>
+            {curadorias === null && <p className="rt-hint">Carregando…</p>}
+            {curadorias !== null && curFiltradas.length === 0 && (
+              <p className="rt-nenhuma">Nenhum pedido aqui ainda.</p>
+            )}
+            {curFiltradas.map((c) => {
+              const u = perfilDe(c.usuario_id);
+              const wa = waDe(u);
+              return (
+                <div className="rt-lead" key={c.id} data-status={c.status}>
+                  <div className="rt-lead-top">
+                    <div>
+                      <b>{u.nome || "Lojista"}</b>
+                      <span className="rt-lead-sub">
+                        {u.nome_completo || ""}{u.cidade ? ` · ${u.cidade}${u.estado ? "-" + u.estado : ""}` : ""}
+                      </span>
+                    </div>
+                    <span className="rt-review-data">{dataBR((c.created_at || "").slice(0, 10))}</span>
+                  </div>
+
+                  <div className="rt-lead-tags">
+                    {c.faixa_compra && <span className="rt-lead-tag forte">{c.faixa_compra}/mês</span>}
+                    {c.canal_venda && <span className="rt-lead-tag">{c.canal_venda}</span>}
+                    {c.tempo_loja && <span className="rt-lead-tag">{c.tempo_loja}</span>}
+                    {c.guia && <span className="rt-lead-tag">{c.guia}</span>}
+                    {c.frete && <span className="rt-lead-tag">frete: {c.frete}</span>}
+                  </div>
+                  {(c.segmentos || []).length > 0 && (
+                    <p className="rt-lead-linha"><b>Vende:</b> {(c.segmentos || []).join(", ")}</p>
+                  )}
+                  {(c.onde_compra || []).length > 0 && (
+                    <p className="rt-lead-linha"><b>Compra em:</b> {(c.onde_compra || []).join(", ")}</p>
+                  )}
+                  {c.observacao && <p className="rt-lead-obs">"{c.observacao}"</p>}
+
+                  <div className="rt-lead-acoes">
+                    {wa && <a className="rt-btn" style={{ textDecoration: "none", padding: "8px 12px", fontSize: 12 }}
+                      href={wa} target="_blank" rel="noreferrer">Chamar no WhatsApp</a>}
+                    <select className="rt-input" style={{ maxWidth: 150, padding: "8px 10px", fontSize: 12 }}
+                      value={c.status} onChange={(e) => mudarStatus(c, e.target.value)}>
+                      <option value="novo">Novo</option>
+                      <option value="falei">Já falei</option>
+                      <option value="cliente">Virou cliente</option>
+                      <option value="nao">Não deu</option>
+                    </select>
+                  </div>
+                </div>
+              );
+            })}
+            {curFiltradas.length > 0 && (
+              <button className="rt-btn ghost" style={{ marginTop: 12 }}
+                onClick={() => baixarCSV(
+                  [["Loja", "Nome", "Cidade", "UF", "WhatsApp", "Compra/mes", "Vende como", "Segmentos", "Compra onde", "Tempo", "Frete", "Guia", "Obs", "Status", "Data"]].concat(
+                    curFiltradas.map((c) => {
+                      const u = perfilDe(c.usuario_id);
+                      return [u.nome, u.nome_completo, u.cidade, u.estado, u.telefone, c.faixa_compra,
+                        c.canal_venda, (c.segmentos || []).join("; "), (c.onde_compra || []).join("; "),
+                        c.tempo_loja, c.frete, c.guia, c.observacao, c.status, (c.created_at || "").slice(0, 10)];
+                    })), "curadorias.csv")}>
+                Baixar planilha
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ---------------- LOJISTAS (CRM) ---------------- */}
+        {aba === "lojistas" && (
+          <div>
+            <input className="rt-input" value={buscaUser} placeholder="Buscar por nome, CNPJ/CPF ou cidade…"
+              onChange={(e) => setBuscaUser(e.target.value)} />
+            <p className="rt-hint" style={{ margin: "8px 0" }}>
+              {usersFiltrados.length} de {lojistas ? lojistas.length : 0} cadastradas
+            </p>
+            {lojistas === null && <p className="rt-hint">Carregando…</p>}
+            <div className="rt-admin-lista">
+              {usersFiltrados.map((u) => (
+                <div className="rt-lead" key={u.id}>
+                  <div className="rt-lead-top">
+                    <div>
+                      <b>{u.nome}</b>
+                      <span className="rt-lead-sub">{u.nome_completo || "—"}</span>
+                    </div>
+                    {u.papel === "admin" && <span className="rt-lead-tag forte">admin</span>}
+                  </div>
+                  <p className="rt-lead-linha">
+                    {u.cnpj || "sem documento"}
+                    {u.telefone ? ` · ${u.telefone}` : ""}
+                    {u.cidade ? ` · ${u.cidade}${u.estado ? "-" + u.estado : ""}` : ""}
+                  </p>
+                  <p className="rt-lead-linha" style={{ color: "var(--muted)", fontSize: 11 }}>
+                    Cadastrou em {dataBR((u.created_at || "").slice(0, 10))}
+                    {u.data_nascimento ? ` · nasc. ${dataBR(u.data_nascimento)}` : ""}
+                  </p>
+                  {waLink(u.telefone) && (
+                    <a className="rt-infolink" style={{ color: "var(--red)" }}
+                      href={waLink(u.telefone)} target="_blank" rel="noreferrer">Chamar no WhatsApp</a>
+                  )}
+                </div>
+              ))}
+            </div>
+            {usersFiltrados.length > 0 && (
+              <button className="rt-btn ghost" style={{ marginTop: 12 }}
+                onClick={() => baixarCSV(
+                  [["Loja", "Nome completo", "CNPJ/CPF", "WhatsApp", "Cidade", "UF", "Nascimento", "Cadastro"]].concat(
+                    usersFiltrados.map((u) => [u.nome, u.nome_completo, u.cnpj, u.telefone, u.cidade,
+                      u.estado, u.data_nascimento, (u.created_at || "").slice(0, 10)])), "lojistas.csv")}>
+                Baixar planilha
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ---------------- LOJAS ---------------- */}
+        {aba === "lojas" && (
+          <div>
+            <input className="rt-input" value={busca} placeholder="Buscar marca para editar…"
+              onChange={(e) => setBusca(e.target.value)} />
+            <p className="rt-hint" style={{ margin: "8px 0" }}>
+              A estrela ⭐ fixa a marca na primeira tela do app.
+            </p>
+            <div className="rt-admin-lista">
+              {lojasFiltradas.slice(0, 30).map((l) => (
+                <AdminLojaRow key={l.id} l={l} info={colab[l.id]} salvando={salvandoId === l.id}
+                  onSave={async (patch, patchColab) => {
+                    setSalvandoId(l.id);
+                    if (patch) await onUpdateLoja(l.id, patch);
+                    if (patchColab) await onSaveColab(l.id, patchColab);
+                    setSalvandoId(null);
+                  }}
+                  onDestaque={onDestaque} />
+              ))}
+            </div>
+            {lojasFiltradas.length > 30 && (
+              <p className="rt-hint">Mostrando 30 de {lojasFiltradas.length} — refine a busca.</p>
+            )}
+          </div>
+        )}
+
+        {/* ---------------- DESTAQUES ---------------- */}
+        {aba === "destaques" && (
+          <div>
+            <p className="rt-hint">
+              Estas marcas aparecem primeiro pra todo mundo, com o selo «Indicada».
+              Some quando a lojista busca ou filtra. Sugestão: no máximo 12.
+            </p>
+            {destaques.length === 0 && (
+              <p className="rt-nenhuma">Nenhuma marca destacada. Use a estrela na aba «Lojas».</p>
+            )}
+            {destaques.map((l, i) => (
+              <div className="rt-dest-row" key={l.id}>
+                <span className="rt-dest-n">{i + 1}</span>
+                <div style={{ flex: 1 }}>
+                  <b>{l.nome}</b>
+                  <span className="rt-lead-sub">{l.segmento} · {SHOPPINGS[l.sh].curto}</span>
+                </div>
+                <button className="rt-mini-btn" disabled={i === 0} onClick={() => onReordenar(l, -1)}>↑</button>
+                <button className="rt-mini-btn" disabled={i === destaques.length - 1} onClick={() => onReordenar(l, 1)}>↓</button>
+                <button className="rt-mini-btn tirar" onClick={() => onDestaque(l)}>✕</button>
               </div>
-              <p className="rt-review-txt" style={{ margin: "4px 0 0" }}>
-                {u.nome_completo || <em style={{ color: "var(--muted)" }}>sem nome completo</em>}
-                {u.cnpj ? ` · CNPJ ${u.cnpj}` : ""}
-                {u.telefone ? ` · ${u.telefone}` : ""}
-                {u.data_nascimento ? ` · nasc. ${dataBR(u.data_nascimento)}` : ""}
-              </p>
-            </div>
-          ))}
-          {usuariosFiltrados.length > 60 && <p className="rt-hint">Mostrando os 60 primeiros — refine a busca pra achar outros.</p>}
-        </div>
-
-        <div style={{ marginTop: 16 }}><button className="rt-btn ghost" onClick={onClose}>Fechar</button></div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function AdminLojaRow({ l, salvando, onSave, onDestaque }) {
+function AdminLojaRow({ l, info, salvando, onSave, onDestaque }) {
+  const [abrir, setAbrir] = useState(false);
   const [nome, setNome] = useState(l.nome);
   const [tel, setTel] = useState(l.tel || "");
   const [insta, setInsta] = useState(l.insta || "");
-  const sujo = nome !== l.nome || tel !== (l.tel || "") || insta !== (l.insta || "");
+  const [ticket, setTicket] = useState(info && info.t != null ? String(info.t) : "");
+  const [tipos, setTipos] = useState((info && info.p ? info.p.join(", ") : ""));
+  const [vibe, setVibe] = useState((info && info.v) || "");
+
+  const sujoLoja = nome !== l.nome || tel !== (l.tel || "") || insta !== (l.insta || "");
+  const sujoColab = ticket !== (info && info.t != null ? String(info.t) : "")
+    || tipos !== (info && info.p ? info.p.join(", ") : "")
+    || vibe !== ((info && info.v) || "");
+
+  const salvar = () => {
+    const n = parseFloat(String(ticket).replace(",", "."));
+    onSave(
+      sujoLoja ? { nome, telefone: tel || null, instagram: insta || null } : null,
+      sujoColab ? {
+        t: isNaN(n) ? null : Math.round(n),
+        p: tipos.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean),
+        v: vibe.trim(),
+      } : null
+    );
+  };
+
   return (
-    <div className="rt-mini-form" style={{ borderBottom: "1px solid var(--rule)", paddingBottom: 10, marginBottom: 10 }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+    <div className="rt-loja-adm">
+      <div className="rt-loja-adm-top">
         <button className="rt-star-btn" data-on={l.destaque ? "1" : "0"}
-          title={l.destaque ? "Tirar dos destaques" : "Destacar na primeira página"}
+          title={l.destaque ? "Tirar dos destaques" : "Fixar na primeira tela"}
           onClick={() => onDestaque(l)}>{l.destaque ? "★" : "☆"}</button>
-        <input className="rt-input" value={nome} style={{ flex: 1 }} onChange={(e) => setNome(e.target.value)} />
-      </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <input className="rt-input" value={tel} placeholder="Telefone" onChange={(e) => setTel(e.target.value)} />
-        <input className="rt-input" value={insta} placeholder="Instagram" onChange={(e) => setInsta(e.target.value)} />
-      </div>
-      {sujo && (
-        <button className="rt-btn" style={{ padding: "6px 10px", fontSize: 12 }} disabled={salvando}
-          onClick={() => onSave({ nome, telefone: tel || null, instagram: insta || null })}>
-          {salvando ? "Salvando…" : "Salvar essa loja"}
+        <button className="rt-loja-adm-nome" onClick={() => setAbrir(!abrir)}>
+          <b>{l.nome}</b>
+          <span className="rt-lead-sub">
+            {l.segmento} · {SHOPPINGS[l.sh].curto}
+            {info && info.t != null ? ` · R$ ${info.t}` : " · sem preço"}
+          </span>
         </button>
+        <span className="rt-loja-adm-seta">{abrir ? "▲" : "▼"}</span>
+      </div>
+
+      {abrir && (
+        <div className="rt-mini-form" style={{ marginTop: 10 }}>
+          <input className="rt-input" value={nome} placeholder="Nome da marca" onChange={(e) => setNome(e.target.value)} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="rt-input" value={tel} placeholder="Telefone" onChange={(e) => setTel(e.target.value)} />
+            <input className="rt-input" value={insta} placeholder="Instagram" onChange={(e) => setInsta(e.target.value)} />
+          </div>
+          <div className="rt-money">
+            <span>Ticket médio R$</span>
+            <input className="rt-input" style={{ maxWidth: 110 }} inputMode="decimal" value={ticket}
+              placeholder="0" onChange={(e) => setTicket(e.target.value)} />
+            <span>/ peça</span>
+          </div>
+          <input className="rt-input" value={tipos} placeholder="Tipos de peça, separados por vírgula"
+            onChange={(e) => setTipos(e.target.value)} />
+          <input className="rt-input" value={vibe} maxLength={90}
+            placeholder="Personalidade da marca (até 90 caracteres)"
+            onChange={(e) => setVibe(e.target.value)} />
+          {(sujoLoja || sujoColab) && (
+            <button className="rt-btn" disabled={salvando} onClick={salvar}>
+              {salvando ? "Salvando…" : "Salvar alterações"}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
 }
+
 
 // ---------------------------------------------------------------------------
 // App
@@ -921,6 +1146,29 @@ export default function App() {
     }
   };
 
+  const reordenarDestaque = async (l, dir) => {
+    const lista = lojas.filter((x) => x.destaque).sort((a, b) => a.ordem - b.ordem);
+    const i = lista.findIndex((x) => x.id === l.id);
+    const j = i + dir;
+    if (j < 0 || j >= lista.length) return;
+    const a = lista[i], b = lista[j];
+    await Promise.all([
+      supabase.from("lojas").update({ destaque_ordem: b.ordem }).eq("id", a.id),
+      supabase.from("lojas").update({ destaque_ordem: a.ordem }).eq("id", b.id),
+    ]);
+    setLojas((prev) => prev.map((x) =>
+      x.id === a.id ? { ...x, ordem: b.ordem } : x.id === b.id ? { ...x, ordem: a.ordem } : x));
+  };
+
+  const salvarColabAdmin = async (lojaId, patch) => {
+    const { error } = await supabase.from("loja_colab").upsert({
+      loja_id: lojaId, ticket_medio: patch.t, tipos_peca: patch.p, personalidade: patch.v,
+      atualizado_por: session.user.id, atualizado_em: new Date().toISOString(),
+    });
+    if (!error) setColab((prev) => ({ ...prev, [lojaId]: patch }));
+    return !error;
+  };
+
   const deleteReviewAdmin = async (reviewId, lojaId) => {
     const { error } = await supabase.from("avaliacoes").delete().eq("id", reviewId);
     if (!error) setRevs((prev) => ({ ...prev, [lojaId]: (prev[lojaId] || []).filter((r) => r.id !== reviewId) }));
@@ -1126,8 +1374,10 @@ export default function App() {
       {mostrarShoppings && <ShoppingsModal onClose={() => setMostrarShoppings(false)} />}
       {mostrarComo && <ComoFuncionaModal onClose={() => setMostrarComo(false)} />}
       {mostrarAdmin && (
-        <AdminPanel lojas={lojas} revsByLoja={revs} onUpdateLoja={updateLojaAdmin}
-          onDeleteReview={deleteReviewAdmin} onDestaque={toggleDestaque} onClose={() => setMostrarAdmin(false)} />
+        <AdminPanel lojas={lojas} colab={colab} revsByLoja={revs} onUpdateLoja={updateLojaAdmin}
+          onSaveColab={salvarColabAdmin} onDeleteReview={deleteReviewAdmin}
+          onDestaque={toggleDestaque} onReordenar={reordenarDestaque}
+          onClose={() => setMostrarAdmin(false)} />
       )}
 
       {csv !== null && (

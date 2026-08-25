@@ -303,3 +303,111 @@ html, body { margin:0; padding:0; width:100%; overflow-x:hidden; background:#141
   .rt-feed { grid-template-columns:1fr 1fr; gap:10px; }
   .rt-nome { font-size:15px; }
 }
+
+
+/* ====== ROLAGEM DOS MODAIS NO CELULAR ======
+   O fundo escuro capturava o toque e a caixa nao rolava. */
+.rt-backdrop {
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.rt-modal-c {
+  max-height:none;
+  overflow:visible;
+  margin:auto;
+}
+
+@media (max-width:600px){
+  .rt-backdrop {
+    align-items:flex-start !important;
+    padding:0 !important;
+    display:block !important;
+  }
+  .rt-modal-c {
+    width:100%;
+    max-width:100% !important;
+    min-height:100vh;
+    border-radius:0;
+    padding:20px 18px 90px;   /* respiro no fim pra nao esconder o botao */
+    margin:0;
+  }
+  /* a ficha da loja tambem rola inteira */
+  .rt-sheet {
+    width:100% !important;
+    max-height:none !important;
+    border-radius:0 !important;
+  }
+  /* o botao de enviar fica sempre alcancavel */
+  .rt-cur-ops { gap:8px; }
+  .rt-cur-op { padding:11px 15px; font-size:14px; }
+}
+
+
+/* ================= PAINEL ADMIN ================= */
+.rt-admin { max-width:720px; }
+.rt-admin-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; }
+.rt-admin-abas { display:flex; gap:6px; overflow-x:auto; padding:10px 0 12px; scrollbar-width:none; border-bottom:1px solid var(--rule); margin-bottom:14px; }
+.rt-admin-abas::-webkit-scrollbar { display:none; }
+.rt-admin-aba {
+  flex:0 0 auto; font-family:'DM Sans',sans-serif; font-size:13px; padding:8px 13px; border-radius:999px;
+  border:1px solid var(--rule); background:var(--paper); color:var(--ink); cursor:pointer; white-space:nowrap;
+}
+.rt-admin-aba[data-on="1"] { background:var(--ink); color:#fff; border-color:var(--ink); font-weight:500; }
+.rt-admin-lista { max-height:none; }
+.rt-admin-filtros { display:flex; gap:6px; overflow-x:auto; padding-bottom:12px; scrollbar-width:none; }
+.rt-admin-filtros::-webkit-scrollbar { display:none; }
+
+/* KPIs do resumo */
+.rt-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; }
+.rt-kpi { background:var(--bone); border:1px solid var(--rule); border-radius:10px; padding:14px; }
+.rt-kpi b { display:block; font-family:'Playfair Display',serif; font-size:28px; line-height:1; color:var(--ink); }
+.rt-kpi span { font-size:11px; color:var(--muted); display:block; margin-top:5px; line-height:1.3; }
+.rt-kpi.destaque { background:#FDEEF0; border-color:var(--red); }
+.rt-kpi.destaque b { color:var(--red); }
+
+/* Cartao de lead / lojista */
+.rt-lead { border:1px solid var(--rule); border-radius:10px; padding:13px; margin-bottom:9px; background:var(--paper); }
+.rt-lead[data-status="novo"] { border-left:3px solid var(--red); }
+.rt-lead[data-status="cliente"] { border-left:3px solid #1F6F5C; background:#F4FBF8; }
+.rt-lead[data-status="nao"] { opacity:.55; }
+.rt-lead-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px; }
+.rt-lead-top b { font-size:14px; display:block; }
+.rt-lead-sub { display:block; font-size:12px; color:var(--muted); margin-top:1px; }
+.rt-lead-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+.rt-lead-tag { font-family:'DM Mono',monospace; font-size:10px; padding:3px 7px; border-radius:3px; background:var(--bone); border:1px solid var(--rule); color:var(--ink); }
+.rt-lead-tag.forte { background:var(--red); color:#fff; border-color:var(--red); }
+.rt-lead-linha { font-size:12.5px; margin:3px 0; line-height:1.4; }
+.rt-lead-linha b { font-weight:500; }
+.rt-lead-obs { font-size:13px; font-style:italic; color:var(--ink); background:var(--bone); border-radius:6px; padding:8px 10px; margin:8px 0 0; }
+.rt-lead-acoes { display:flex; gap:8px; align-items:center; margin-top:11px; flex-wrap:wrap; }
+
+/* Linha de loja no admin */
+.rt-loja-adm { border:1px solid var(--rule); border-radius:10px; padding:11px; margin-bottom:8px; background:var(--paper); }
+.rt-loja-adm-top { display:flex; align-items:center; gap:9px; }
+.rt-loja-adm-nome { flex:1; text-align:left; background:none; border:0; cursor:pointer; padding:0; }
+.rt-loja-adm-nome b { font-size:14px; display:block; color:var(--ink); }
+.rt-loja-adm-seta { font-size:9px; color:var(--muted); }
+
+/* Destaques ordenaveis */
+.rt-dest-row { display:flex; align-items:center; gap:8px; border:1px solid var(--rule); border-radius:10px; padding:11px; margin-bottom:8px; background:var(--paper); }
+.rt-dest-n { font-family:'Playfair Display',serif; font-weight:700; font-size:18px; color:var(--gold); width:24px; text-align:center; }
+.rt-dest-row b { font-size:14px; display:block; }
+.rt-mini-btn { width:32px; height:32px; border-radius:8px; border:1px solid var(--rule); background:var(--paper); cursor:pointer; font-size:13px; color:var(--ink); }
+.rt-mini-btn:disabled { opacity:.3; cursor:default; }
+.rt-mini-btn.tirar { color:var(--red); border-color:#F3C6CD; }
+
+/* ============ ICONES BEM MAIORES ============ */
+.rt-cat { width:96px; }
+.rt-cat-ico { width:88px; height:88px; font-size:44px; border-radius:22px; }
+.rt-cat span { font-size:12px; }
+
+@media (max-width:600px){
+  .rt-cats { gap:10px; padding:16px 0 6px; }
+  .rt-cat { width:92px; }
+  .rt-cat-ico { width:84px; height:84px; font-size:42px; border-radius:21px; }
+  .rt-cat span { font-size:12px; }
+  .rt-admin { padding-bottom:100px; }
+  .rt-kpis { grid-template-columns:1fr 1fr; }
+  .rt-lead-acoes .rt-btn { flex:1; text-align:center; }
+}
