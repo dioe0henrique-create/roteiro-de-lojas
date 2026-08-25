@@ -274,3 +274,32 @@
 .rt-porta-btn { width:100%; font-family:'DM Sans',sans-serif; font-weight:500; font-size:16px; background:var(--red); color:#fff; border:0; padding:16px; border-radius:8px; cursor:pointer; }
 .rt-porta-btn:hover { background:var(--red-deep); }
 .rt-porta-pe { font-size:12px; color:#8C857C; text-align:center; margin:12px 0 0; }
+
+
+/* ============ CORREÇÕES MOBILE ============ */
+
+/* tira a faixa branca nas bordas (margem padrão do navegador) */
+html, body { margin:0; padding:0; width:100%; overflow-x:hidden; background:#14110F; }
+#root { width:100%; }
+.rt { width:100%; overflow-x:hidden; }
+.rt-top { width:100%; }
+
+/* iPhone pinta texto de botão de azul — força a cor certa */
+.rt button, .rt a { -webkit-tap-highlight-color:transparent; }
+.rt-card, .rt-card * { color:var(--ink); }
+.rt-nome { color:var(--ink) !important; }
+.rt-vibe, .rt-ticket.vazio { color:var(--muted) !important; }
+.rt-shop-tag { color:#fff !important; }
+.rt-status-txt.novo { color:var(--muted) !important; }
+.rt-fav { color:initial !important; font-size:17px; }
+
+/* ícones dos segmentos maiores no celular */
+@media (max-width:600px){
+  .rt-cats { gap:10px; }
+  .rt-cat { width:88px; }
+  .rt-cat-ico { width:80px; height:80px; font-size:38px; border-radius:20px; }
+  .rt-cat span { font-size:12px; }
+  .rt-top-wrap, .rt-wrap { padding-left:14px; padding-right:14px; }
+  .rt-feed { grid-template-columns:1fr 1fr; gap:10px; }
+  .rt-nome { font-size:15px; }
+}

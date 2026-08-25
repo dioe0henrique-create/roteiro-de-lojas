@@ -722,7 +722,7 @@ function PortaEntrada({ onEntrar }) {
   return (
     <div className="rt-porta">
       <div className="rt-porta-in">
-        <p className="rt-eyebrow">Arara</p>
+        <p className="rt-eyebrow">Giro Certo</p>
         <h1 className="rt-porta-tit">As 336 marcas do polo,<br />na palma da sua mão.</h1>
         <p className="rt-porta-sub">
           Master Cianorte, Paraná Moda Park e Vest Sul reunidos num roteiro só —
@@ -1007,7 +1007,7 @@ export default function App() {
         <div className="rt-top-wrap">
           <div className="rt-top-row">
             <div>
-              <p className="rt-eyebrow">Arara</p>
+              <p className="rt-eyebrow">Giro Certo</p>
               <h1 className="rt-title">O que você procura hoje?</h1>
             </div>
             <button className="rt-perfil-btn" onClick={() => (session ? setMostrarPerfil(true) : setMostrarAuth(true))}>
