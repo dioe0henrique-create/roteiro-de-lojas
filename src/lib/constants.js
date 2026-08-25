@@ -1,4 +1,4 @@
-export const APP_NOME = "Roteiro de Lojas";
+export const APP_NOME = "Arara";
 
 export const PRIMAVERA_WHATSAPP = "5566996983540";
 
