@@ -98,3 +98,24 @@ export function statusMarca(revs) {
   if (m >= 4) return { label: "Bem avaliada", tone: "bom" };
   return { label: `${n} avaliação${n > 1 ? "ões" : ""}`, tone: "neutro" };
 }
+
+// Quantos "$" mostrar ao lado do preço, a partir do maior valor que a marca
+// pratica (faixa cheia se tiver, senão o ticket médio). Mesmos cortes das FAIXAS.
+export function precoTier(info) {
+  if (!info) return null;
+  const v = info.mx != null ? info.mx : info.t;
+  if (v == null) return null;
+  if (v <= 50) return 1;
+  if (v <= 100) return 2;
+  if (v <= 200) return 3;
+  return 4;
+}
+
+// Marca "criada" há pouco tempo entra como Novo no roteiro.
+export function ehNovo(criadoEm, dias) {
+  if (!criadoEm) return false;
+  const limite = (dias == null ? 21 : dias) * 24 * 60 * 60 * 1000;
+  const t = new Date(criadoEm).getTime();
+  if (isNaN(t)) return false;
+  return Date.now() - t < limite;
+}
