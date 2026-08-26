@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "./supabaseClient";
 import { APP_NOME, PRIMAVERA_WHATSAPP, SHOPPING_INFO, SHOPPINGS, ICONES, SUGESTOES, FAIXAS } from "./lib/constants";
-import { norm, iniciais, waLink, igLink, dataCurta, dataBR, maskDoc, docOk, tipoDoc, UFS, maskTelefone, media, statusMarca } from "./lib/helpers";
+import { norm, iniciais, waLink, igLink, dataCurta, dataBR, maskDoc, docOk, tipoDoc, UFS, maskTelefone, media, statusMarca, precoTier, ehNovo } from "./lib/helpers";
 
 // ---------------------------------------------------------------------------
 // Peças pequenas de UI
@@ -33,6 +33,8 @@ function Card({ l, info, revs, isFav, onOpen, onFav }) {
   const s = SHOPPINGS[l.sh];
   const st = statusMarca(revs);
   const m = media(revs);
+  const tier = precoTier(info);
+  const novo = ehNovo(l.criadoEm);
   return (
     <button className="rt-card" onClick={() => onOpen(l)}>
       <button
@@ -40,23 +42,27 @@ function Card({ l, info, revs, isFav, onOpen, onFav }) {
         aria-label={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
       >{isFav ? "❤️" : "🤍"}</button>
 
-      <div className="rt-card-top">
-        <div className="rt-avatar" style={{ "--shop": s.cor }}>{iniciais(l.nome)}</div>
-        <div>
-          <h3 className="rt-nome">{l.nome}</h3>
-          <p className={"rt-vibe" + (info && info.v ? "" : " vazio")}>
-            {info && info.v ? info.v : l.segmento}
-          </p>
+      {(l.destaque || novo) && (
+        <div className="rt-card-selos">
+          {l.destaque && <span className="rt-selo rt-selo-ind">★ Indicada</span>}
+          {novo && !l.destaque && <span className="rt-selo rt-selo-novo">Novo</span>}
         </div>
-      </div>
+      )}
 
-      <div className="rt-row2">
+      <div className="rt-avatar" style={{ "--shop": s.cor }}>{iniciais(l.nome)}</div>
+
+      <h3 className="rt-nome">{l.nome}</h3>
+      <p className="rt-card-seg">{l.segmento}</p>
+      {info && info.v && <p className="rt-vibe">{info.v}</p>}
+
+      <div className="rt-card-tags">
         <span className="rt-shop-tag" style={{ background: s.cor }}>{s.curto}</span>
         {info && info.t != null ? (
           info.mn != null && info.mx != null && info.mx > info.mn
-            ? <span className="rt-ticket">R$ {info.mn}<small>–</small>{info.mx}<small> /peça</small></span>
-            : <span className="rt-ticket">R$ {info.t}<small> /peça</small></span>
+            ? <span className="rt-ticket">R$ {info.mn}–{info.mx}</span>
+            : <span className="rt-ticket">R$ {info.t}</span>
         ) : <span className="rt-ticket vazio">sem preço ainda</span>}
+        {tier != null && <span className="rt-tier">{"$".repeat(tier)}</span>}
       </div>
 
       {info && info.p && info.p.length > 0 && (
@@ -67,10 +73,11 @@ function Card({ l, info, revs, isFav, onOpen, onFav }) {
       )}
 
       <div className="rt-status">
-        {l.destaque && <span className="rt-selo-ind">Indicada</span>}
         {m != null && <Stars value={m} />}
         <span className={"rt-status-txt " + st.tone}>{st.label}</span>
       </div>
+
+      <span className="rt-card-wa">💬 Atendimento via WhatsApp</span>
     </button>
   );
 }
@@ -352,6 +359,48 @@ function ComoFuncionaModal({ onClose }) {
         <div style={{ marginTop: 16 }}><button className="rt-btn ghost" onClick={onClose}>Fechar</button></div>
       </div>
     </div>
+  );
+}
+
+function LegalModal({ tipo, onClose }) {
+  const privacidade = tipo === "privacidade";
+  return (
+    <div className="rt-backdrop" style={{ alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+      <div className="rt-modal-c" onClick={(e) => e.stopPropagation()}>
+        <h3 className="rt-modal-t">{privacidade ? "Política de privacidade" : "Termos de uso"}</h3>
+        <div className="rt-legal">
+          {privacidade ? (
+            <>
+              <p><b>Responsável legal:</b> Oliveira Tur Viagens / Dioe Henrique (CNPJ 29.837.789/0001-11).</p>
+              <p><b>Coleta de dados:</b> nome da loja, nome completo, CNPJ/CPF, telefone/WhatsApp, cidade, UF, data de nascimento e preferências de curadoria.</p>
+              <p><b>Uso dos dados:</b> exclusivamente para conectar o lojista às marcas, realizar a curadoria gratuita e auxiliar no despacho logístico de mercadorias.</p>
+              <p><b>Proteção:</b> não vendemos nem compartilhamos dados com terceiros.</p>
+            </>
+          ) : (
+            <>
+              <p>Uso 100% gratuito para o lojista.</p>
+              <p>O Giro Certo conecta o lojista diretamente com a marca para negociação direta — sem atravessador ou intermediário no preço.</p>
+              <p>Serviços logísticos e despacho unificado de pacotes são combinados via WhatsApp de atendimento.</p>
+            </>
+          )}
+        </div>
+        <button className="rt-btn ghost" onClick={onClose}>Fechar</button>
+      </div>
+    </div>
+  );
+}
+
+function Footer({ onPrivacidade, onTermos }) {
+  return (
+    <footer className="rt-footer">
+      <p className="rt-footer-nome">Giro Certo</p>
+      <div className="rt-footer-links">
+        <button type="button" onClick={onPrivacidade}>Privacidade</button>
+        <button type="button" onClick={onTermos}>Termos</button>
+        <a href="mailto:oliveiratur.viagem@gmail.com">Contato</a>
+      </div>
+      <p className="rt-footer-copy">© {new Date().getFullYear()} Giro Certo. O melhor da moda em um só lugar.</p>
+    </footer>
   );
 }
 
@@ -1072,6 +1121,8 @@ export default function App() {
   const [mostrarComo, setMostrarComo] = useState(false);
   const [mostrarAdmin, setMostrarAdmin] = useState(false);
   const [mostrarCuradoria, setMostrarCuradoria] = useState(false);
+  const [mostrarLegal, setMostrarLegal] = useState(null); // null | "privacidade" | "termos"
+  const [catsAbertas, setCatsAbertas] = useState(false);
   const [csv, setCsv] = useState(null);
 
   // sessão
@@ -1085,6 +1136,7 @@ export default function App() {
     id: l.id, nome: l.nome, segmento: l.segmento, sh: l.shopping,
     tel: l.telefone || null, insta: l.instagram || null, exc: !!l.exclusiva,
     destaque: !!l.destaque, ordem: l.destaque_ordem == null ? 999 : l.destaque_ordem,
+    criadoEm: l.created_at || l.criado_em || null,
   });
 
   const carregarLojas = useCallback(async (logado) => {
@@ -1360,23 +1412,11 @@ export default function App() {
             <div>
               <p className="rt-eyebrow">Giro Certo</p>
               <h1 className="rt-title">O que você procura hoje?</h1>
+              <p className="rt-subtitle">Encontre as marcas certas para a sua loja</p>
             </div>
             <button className="rt-perfil-btn" onClick={() => (session ? setMostrarPerfil(true) : setMostrarAuth(true))}>
               {session ? (perfil ? perfil.nome.split(" ")[0] : "…") : "Entrar"}
             </button>
-          </div>
-          {!carregando && (
-            <p className="rt-stat">
-              <b>{lojas.length}</b> marcas no roteiro · <b>{totalAvaliacoes}</b> avaliações
-              {lojistasAtivos > 0 && <> · <b>{lojistasAtivos}</b> lojista{lojistasAtivos > 1 ? "s" : ""} avaliando</>}
-            </p>
-          )}
-          <div className="rt-infolinks">
-            <button className="rt-infolink" onClick={() => setMostrarShoppings(true)}>Sobre os shoppings</button>
-            <button className="rt-infolink" onClick={() => setMostrarComo(true)}>Como funciona</button>
-            {perfil && perfil.papel === "admin" && (
-              <button className="rt-infolink" onClick={() => setMostrarAdmin(true)}>Painel Admin</button>
-            )}
           </div>
 
           <div className="rt-search">
@@ -1386,33 +1426,61 @@ export default function App() {
               : <span className="rt-search-ico">⌕</span>}
           </div>
 
-          <div className="rt-cats">
-            <button className="rt-cat" data-on={catAtiva === "todos" ? "1" : "0"} onClick={() => setCatAtiva("todos")}>
-              <span className="rt-cat-ico">🗂️</span><span>Todas</span>
-            </button>
-            {SEGMENTOS.map((s) => (
-              <button key={s} className="rt-cat" data-on={catAtiva === s ? "1" : "0"} onClick={() => setCatAtiva(s)}>
-                <span className="rt-cat-ico">{ICONES[s] || "🏷️"}</span><span>{s}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="rt-filters">
-            <button className="rt-chip" data-on={shop === "todos" ? "1" : "0"} onClick={() => setShop("todos")}>Os 3 shoppings</button>
-            {Object.entries(SHOPPINGS).map(([k, v]) => (
-              <button key={k} className="rt-chip" data-on={shop === k ? "1" : "0"} onClick={() => setShop(k)}>
-                <span className="dot" style={{ background: v.cor }} />{v.curto}
-              </button>
-            ))}
-            {FAIXAS.map((f) => (
-              <button key={f.id} className="rt-chip" data-on={faixa === f.id ? "1" : "0"} onClick={() => setFaixa(f.id)}>{f.label}</button>
-            ))}
-            <button className="rt-chip" data-on={soFav ? "1" : "0"} onClick={() => (session ? setSoFav(!soFav) : setMostrarAuth(true))}>❤️ Favoritas</button>
+          {!carregando && (
+            <p className="rt-stat">
+              <b>{lojas.length}</b> marcas no roteiro · <b>{totalAvaliacoes}</b> avaliações
+              {lojistasAtivos > 0 && <> · <b>{lojistasAtivos}</b> lojista{lojistasAtivos > 1 ? "s" : ""} avaliando</>}
+            </p>
+          )}
+          <div className="rt-infolinks">
+            <button className="rt-infolink" onClick={() => setMostrarComo(true)}>Como funciona</button>
+            {perfil && perfil.papel === "admin" && (
+              <button className="rt-infolink" onClick={() => setMostrarAdmin(true)}>Painel Admin</button>
+            )}
           </div>
         </div>
       </div>
 
       <div className="rt-wrap">
+        <div className="rt-secao">
+          <p className="rt-secao-tit">Categorias</p>
+          <div className="rt-cats-grid">
+            <button className="rt-catg" data-on={catAtiva === "todos" ? "1" : "0"} onClick={() => setCatAtiva("todos")}>
+              <span className="rt-catg-ico">🗂️</span><span>Todas</span>
+            </button>
+            {(catsAbertas ? SEGMENTOS : SEGMENTOS.slice(0, 5)).map((s) => (
+              <button key={s} className="rt-catg" data-on={catAtiva === s ? "1" : "0"} onClick={() => setCatAtiva(s)}>
+                <span className="rt-catg-ico">{ICONES[s] || "🏷️"}</span><span>{s}</span>
+              </button>
+            ))}
+            {!catsAbertas && SEGMENTOS.length > 5 && (
+              <button className="rt-catg rt-catg-mais" onClick={() => setCatsAbertas(true)}>
+                <span className="rt-catg-ico">+</span><span>Ver mais</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="rt-secao">
+          <div className="rt-secao-cab">
+            <p className="rt-secao-tit" style={{ margin: 0 }}>Por shopping</p>
+            <button className="rt-secao-link" onClick={() => setMostrarShoppings(true)}>Ver mapa</button>
+          </div>
+          <div className="rt-shop-pills">
+            <button className="rt-shoppill" data-on={shop === "todos" ? "1" : "0"} onClick={() => setShop("todos")}>Todos</button>
+            {Object.entries(SHOPPINGS).map(([k, v]) => (
+              <button key={k} className="rt-shoppill" data-on={shop === k ? "1" : "0"} onClick={() => setShop(k)}>{v.curto}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="rt-filters">
+          {FAIXAS.map((f) => (
+            <button key={f.id} className="rt-chip" data-on={faixa === f.id ? "1" : "0"} onClick={() => setFaixa(f.id)}>{f.label}</button>
+          ))}
+          <button className="rt-chip" data-on={soFav ? "1" : "0"} onClick={() => (session ? setSoFav(!soFav) : setMostrarAuth(true))}>❤️ Favoritas</button>
+        </div>
+
         {carregando ? (
           <div className="rt-load">carregando o roteiro…</div>
         ) : (
@@ -1441,6 +1509,8 @@ export default function App() {
           </>
         )}
       </div>
+
+      <Footer onPrivacidade={() => setMostrarLegal("privacidade")} onTermos={() => setMostrarLegal("termos")} />
 
       <div className="rt-cta">
         <div className="rt-cta-in">
@@ -1476,6 +1546,7 @@ export default function App() {
       )}
       {mostrarShoppings && <ShoppingsModal onClose={() => setMostrarShoppings(false)} />}
       {mostrarComo && <ComoFuncionaModal onClose={() => setMostrarComo(false)} />}
+      {mostrarLegal && <LegalModal tipo={mostrarLegal} onClose={() => setMostrarLegal(null)} />}
       {mostrarAdmin && (
         <AdminPanel lojas={lojas} colab={colab} revsByLoja={revs} onUpdateLoja={updateLojaAdmin}
           onSaveColab={salvarColabAdmin} onCriarLoja={criarLoja} onDeleteReview={deleteReviewAdmin}
